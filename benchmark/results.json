@@ -1,0 +1,54 @@
+{
+  "benchmark_date": "2026-08-24",
+  "total_benchmark_sentences": 20,
+  "engines_compared": [
+    "f5-tts",
+    "gpt-sovits"
+  ],
+  "f5_tts": {
+    "architecture": "Flow Matching + Diffusion Transformer (DiT)",
+    "code_license": "MIT",
+    "model_license": "CC-BY-NC 4.0 / Community",
+    "strengths": "Tốc độ nhanh (Non-Autoregressive), ít lặp từ (no hallucination/looping), hỗ trợ zero-shot mượt mà",
+    "considerations": "Cần reference audio sạch (<10s)"
+  },
+  "gpt_sovits": {
+    "architecture": "Autoregressive GPT + VITS Audio Decoder",
+    "code_license": "MIT",
+    "model_license": "Release Specific (V1/V2)",
+    "strengths": "Few-shot similarity cực cao, học ngữ điệu phong phú từ audio mẫu",
+    "considerations": "Autoregressive có thể lặp từ nếu prompt dài, inference chậm hơn F5-TTS"
+  },
+  "evaluation_criteria": [
+    {
+      "criterion": "Pronunciation (Phát âm tiếng Việt)",
+      "max_score": 10,
+      "weight": "25%"
+    },
+    {
+      "criterion": "Speaker Similarity (Độ giống giọng mẫu)",
+      "max_score": 10,
+      "weight": "30%"
+    },
+    {
+      "criterion": "Naturalness (Độ tự nhiên)",
+      "max_score": 10,
+      "weight": "15%"
+    },
+    {
+      "criterion": "Prosody & Style (Ngữ điệu & Cảm xúc)",
+      "max_score": 10,
+      "weight": "15%"
+    },
+    {
+      "criterion": "Stability (Độ ổn định không ngọng/lặp từ)",
+      "max_score": 10,
+      "weight": "10%"
+    },
+    {
+      "criterion": "Speed & VRAM Efficiency (Tốc độ & Tài nguyên)",
+      "max_score": 10,
+      "weight": "5%"
+    }
+  ]
+}

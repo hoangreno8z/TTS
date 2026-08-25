@@ -1,0 +1,49 @@
+project:
+  language: vi-VN
+  max_chars: 5000
+  daily_runs_target: 3
+  user_count: 1
+  cost_target: 0
+
+engines:
+  selected_engine: f5-tts
+  fallback_engine: gpt-sovits
+  primary_candidates:
+    - f5-tts
+    - gpt-sovits
+  optional_benchmark:
+    - openvoice
+
+engine_details:
+  f5-tts:
+    name: "F5-TTS Vietnamese (Flow Matching Non-AR)"
+    upstream_repo: "https://github.com/SWivid/F5-TTS"
+    vietnamese_community: "https://github.com/psilabvnorg/F5-TTS-Vietnamese"
+    code_license: "MIT"
+    model_license: "CC-BY-NC 4.0 / Community"
+    status: "active_primary"
+    selection_rationale: "Kiến trúc Non-Autoregressive không bị lặp từ trên văn bản dài (5000 ký tự), phát âm tiếng Việt chuẩn xác, tốc độ sinh nhanh và VRAM nhẹ trên GPU T4 Free."
+  gpt-sovits:
+    name: "GPT-SoVITS (Few-shot Autoregressive)"
+    upstream_repo: "https://github.com/RVC-Boss/GPT-SoVITS"
+    code_license: "MIT"
+    status: "active_fallback"
+    selection_rationale: "Tái tạo âm sắc tốt cho câu ngắn, dùng làm engine đối chứng/dự phòng."
+
+styles:
+  - neutral
+  - serious
+  - storytelling
+
+output:
+  master_format: wav
+  export_format: mp3
+  target_sample_rate: 24000
+  channels: 1
+
+security:
+  public_api: false
+  require_voice_consent: true
+  commit_audio: false
+  commit_model_weights: false
+  commit_secrets: false

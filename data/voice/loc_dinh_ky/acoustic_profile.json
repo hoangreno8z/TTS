@@ -1,0 +1,31 @@
+{
+  "style_id": "loc_dinh_ky",
+  "name": "Phong cách Loc_Dinh_Ky",
+  "description": "Trích đoạn cắt 811.0s -> 821.3s từ YTSave_YouTube_Loc-Dinh-Ky-Phan-1-Chau-Tinh-Tri-1992-1-_Media_f7HxfIpeSio_008_128k.mp3",
+  "total_duration_seconds": 10.26,
+  "files_processed": 1,
+  "f0_statistics": {
+    "f0_mean_hz": 137.0,
+    "f0_std_hz": 42.0,
+    "f0_min_hz": 60.0,
+    "f0_max_hz": 293.9,
+    "suggested_pitch_shift_semitones": 0.26
+  },
+  "formants": {
+    "F1_hz": 550.0,
+    "F2_hz": 1750.0,
+    "F3_hz": 2900.0,
+    "F4_hz": 4500.0
+  },
+  "spectral_bands": {
+    "low_energy_0_500hz": 10.52,
+    "mid_energy_500_2khz": 2.654,
+    "formant_clarity_2_4khz": 0.949,
+    "air_band_4_8khz": 0.177
+  },
+  "faiss_timbre_vectors": 511,
+  "has_index": true,
+  "spectral_envelope_bins": 1025,
+  "pitch_adjustment": 0.0104,
+  "speed_rate": 0.98
+}

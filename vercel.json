@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "name": "lapque-vietnamese-tts",
+  "cleanUrls": true,
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/$1"
+    }
+  ]
+}

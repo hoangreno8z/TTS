@@ -1,0 +1,35 @@
+{
+  "style_id": "loc_dinh_ky",
+  "best_score": 47.6,
+  "total_rounds": 2,
+  "timestamp": 1787669038.2828138,
+  "optimized_parameters": {
+    "pitch_shift_semitones": 0.4188745367546136,
+    "formant_warp_ratio": 1.0029296875,
+    "morph_strength": 0.8,
+    "index_rate": 0.88,
+    "eq_sub_gain_db": 1.0522757813483934,
+    "eq_mid_gain_db": 0.0,
+    "eq_air_gain_db": 0.0807830438054778,
+    "resonance_q": 1.2,
+    "anti_crackle_filter": true
+  },
+  "final_critique": [
+    "Da so khop pho dac trung giong.",
+    "Cao do giong rat chuan (lech chi +0.27 not).",
+    "Dinh F1 lech +141Hz.",
+    "Am thanh trong treo, khong co tieng re."
+  ],
+  "final_breakdown": {
+    "timbre_score": 5.0,
+    "timbre_max": 35.0,
+    "pitch_score": 24.0,
+    "pitch_max": 25.0,
+    "formant_score": 8.6,
+    "formant_max": 20.0,
+    "clarity_score": 10.0,
+    "clarity_max": 10.0,
+    "energy_score": 0.0,
+    "energy_max": 10.0
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "project": "LAPQUE Personal Vietnamese TTS",
+  "created_for": "Google Antigravity",
+  "scope": "single-user, Vietnamese-only, free-first",
+  "max_chars": 5000,
+  "daily_runs": "2-3",
+  "styles": [
+    "neutral",
+    "serious",
+    "storytelling"
+  ],
+  "created_date": "2026-08-24",
+  "contents": [
+    "README_FIRST.md",
+    "docs/01_REQUIREMENTS.md",
+    "docs/02_ARCHITECTURE.md",
+    "docs/03_DATASET.md",
+    "docs/04_VIETNAMESE_TEXT_PIPELINE.md",
+    "docs/05_ENGINE_BENCHMARK.md",
+    "docs/06_STYLE.md",
+    "docs/07_FINETUNING.md",
+    "docs/08_FREE_INFRA.md",
+    "docs/09_SECURITY_AND_PRIVACY.md",
+    "docs/10_ACCEPTANCE_TEST.md",
+    "docs/11_TROUBLESHOOTING.md",
+    "docs/12_ANTIGRAVITY_WORKFLOW.md",
+    "config/engines.yaml",
+    "backend/app/main.py",
+    "backend/requirements.txt",
+    "frontend/README.md",
+    "scripts/README.md",
+    "prompts/ANTIGRAVITY_MASTER_PROMPT.md",
+    "prompts/PHASE_01_TO_13.md",
+    "prompts/RECOVERY_PROMPT.md",
+    "LICENSES_TO_CHECK.md",
+    "SOURCE_INDEX.md",
+    "PROJECT_STATE_TEMPLATE.md",
+    ".gitignore"
+  ]
+}

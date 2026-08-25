@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LAPQUE Personal Vietnamese TTS Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <i class="fa-solid fa-waveform-lines text-white text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight tracking-tight flex items-center gap-2">
+            LAPQUE <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">Personal TTS</span>
+          </h1>
+          <p class="text-xs text-slate-400">Tiếng Việt • 5.000 ký tự • F5-TTS AI Core • 0đ</p>
+        </div>
+      </div>
+      
+      <!-- Action Tools & System Health Badge -->
+      <div class="flex items-center space-x-2.5">
+        <button id="btnOpenAutoTuneHeader" onclick="window.openAutoTuneModal && window.openAutoTuneModal()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-semibold text-xs shadow-md shadow-orange-500/20 flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-scale-balanced"></i> AI Giám Khảo
+        </button>
+        <button id="btnOpenCutterHeader" onclick="window.openCutterModal && window.openCutterModal()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-md shadow-indigo-500/20 flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-scissors"></i> Cắt MP3
+        </button>
+        <div id="healthBadge" class="flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="healthText">Đang kiểm tra...</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Left Column: Input & Synthesis (7 cols) -->
+    <div class="lg:col-span-7 space-y-6">
+      
+      <!-- Text Area Card -->
+      <div class="glass-card rounded-2xl p-6 shadow-xl space-y-4">
+        <div class="flex items-center justify-between">
+          <label for="textInput" class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-file-lines text-indigo-400"></i> Văn Bản Tiếng Việt
+          </label>
+          <div class="flex items-center space-x-2 text-xs">
+            <button id="btnSample1" class="text-indigo-400 hover:text-indigo-300 transition">Mẫu Tin Tức</button>
+            <span class="text-slate-600">•</span>
+            <button id="btnSample2" class="text-indigo-400 hover:text-indigo-300 transition">Mẫu Kể Chuyện</button>
+            <span class="text-slate-600">•</span>
+            <button id="btnClear" class="text-rose-400 hover:text-rose-300 transition">Xóa</button>
+          </div>
+        </div>
+
+        <div class="relative">
+          <textarea
+            id="textInput"
+            rows="9"
+            maxlength="5000"
+            placeholder="Nhập hoặc dán văn bản tiếng Việt vào đây (tối đa 5.000 ký tự). Hệ thống sẽ tự động chuẩn hóa ngày tháng, số đếm, tiền tệ và tách câu an toàn..."
+            class="w-full bg-slate-900/90 text-slate-100 placeholder-slate-500 border border-slate-800 rounded-xl p-4 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition resize-none"
+          ></textarea>
+          
+          <!-- Live Character Counter -->
+          <div class="flex items-center justify-between text-xs text-slate-400 mt-2 px-1">
+            <div id="wordCountText">0 từ • ~0 đoạn</div>
+            <div id="charCounter" class="font-mono">
+              <span id="charCount" class="font-bold text-slate-200">0</span> / 5.000 ký tự
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Style Selection Card -->
+      <div class="glass-card rounded-2xl p-6 shadow-xl space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-masks-theater text-indigo-400"></i> Chọn Phong Cách Giọng Đọc (Style)
+          </h2>
+          <button id="btnOpenAddStyle" class="text-xs text-indigo-400 hover:text-indigo-300 transition flex items-center gap-1 font-medium">
+            <i class="fa-solid fa-plus text-[10px]"></i> Thêm Style Mới
+          </button>
+        </div>
+        
+        <!-- Dynamic Styles Container -->
+        <div id="stylesContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- Rendered via app.js -->
+        </div>
+
+        <!-- Dual-Core V7 Engine Selector & Colab RVC Neural Bridge -->
+        <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-300 font-medium flex items-center gap-1.5">
+              <i class="fa-solid fa-microchip text-indigo-400"></i> Bộ Xử Lý Giọng Đọc
+            </span>
+            <div class="flex items-center space-x-1">
+              <button type="button" id="btnVoiceMale" class="px-2.5 py-1 rounded bg-indigo-600/90 text-white font-medium text-[11px]">👨 Nam</button>
+              <button type="button" id="btnVoiceFemale" class="px-2.5 py-1 rounded bg-slate-800 text-slate-400 font-medium text-[11px]">👩 Nữ</button>
+            </div>
+          </div>
+          
+          <!-- Colab RVC v2 Neural Voice Cloning Bridge -->
+          <div class="pt-1 border-t border-slate-800/60">
+            <details class="cursor-pointer" open>
+              <summary class="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1">
+                <i class="fa-solid fa-brain"></i> Kết nối Google Colab RVC GPU (Mô Phỏng 100% Giọng Mẫu Thật)
+              </summary>
+              <div class="mt-2 space-y-1 text-[11px] text-slate-400">
+                <input type="text" id="colabGpuUrl" placeholder="Dán link Cloudflare Tunnel từ Colab (vd: https://xxx.trycloudflare.com)" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-200 focus:border-indigo-500">
+                <p class="text-[10px] text-slate-500">
+                  ⚡ Mở <code class="text-indigo-300">notebooks/08_rvc_colab_api_server.py</code> trên Google Colab Free (GPU T4) để chạy suy luận RVC Neural Voice Conversion.
+                </p>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- Add Custom Style Form (Hidden by default) -->
+        <div id="addStyleForm" class="hidden bg-slate-900/90 rounded-xl p-4 border border-indigo-500/30 space-y-3 text-xs">
+          <div class="font-semibold text-slate-200 flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> Tạo Phong Cách / Giọng Nhân Vật Mới</span>
+            <button id="btnCloseAddStyle" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="newStyleId" placeholder="Mã style (vd: chau_tinh_tri, dora)" class="bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 focus:border-indigo-500">
+            <input type="text" id="newStyleName" placeholder="Tên hiển thị (vd: Châu Tinh Trì Vui Nhộn)" class="bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 focus:border-indigo-500">
+          </div>
+          <input type="text" id="newStyleDesc" placeholder="Mô tả phong cách (vd: Giọng lồng tiếng hài hước, dứt khoát)" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 focus:border-indigo-500">
+          
+          <div class="border border-dashed border-slate-800 rounded-lg p-2.5 bg-slate-950/60">
+            <label class="block text-slate-400 mb-1 text-[11px] font-medium">Tải lên các file MP3/WAV giọng mẫu của nhân vật (1 hoặc nhiều file):</label>
+            <input type="file" id="newStyleFiles" multiple accept=".mp3,.wav,.m4a,.flac" class="text-[11px] text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+          </div>
+
+          <button id="btnSaveNewStyle" class="w-full py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20">
+            <i class="fa-solid fa-microchip"></i>
+            <span id="btnSaveNewStyleText">Bóc Tách Phổ Fourier & Tạo Style</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <button
+        id="btnGenerate"
+        class="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-base shadow-lg shadow-indigo-600/30 active:scale-[0.99] transition flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span id="btnGenerateText">Tổng Hợp Giọng Nói</span>
+      </button>
+
+      <!-- Progress / Status Notification -->
+      <div id="progressBox" class="hidden glass-card rounded-2xl p-5 border-indigo-500/30 space-y-3">
+        <div class="flex items-center justify-between text-xs">
+          <span id="progressStatus" class="font-medium text-indigo-400 flex items-center gap-2">
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang chuẩn hóa văn bản tiếng Việt...
+          </span>
+          <span id="progressTimer" class="font-mono text-slate-400">0.0s</span>
+        </div>
+        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+          <div id="progressBar" class="bg-indigo-500 h-full w-0 transition-all duration-300"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Results & Voice Ref Inspector (5 cols) -->
+    <div class="lg:col-span-5 space-y-6">
+
+      <!-- Synthesis Result Card -->
+      <div id="resultCard" class="glass-card rounded-2xl p-6 shadow-xl space-y-5 border-indigo-500/20">
+        <h2 class="text-sm font-semibold text-slate-200 flex items-center justify-between">
+          <span class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-play text-indigo-400"></i> Kết Quả Tổng Hợp
+          </span>
+          <span id="resultBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">Chờ tổng hợp</span>
+        </h2>
+
+        <!-- HTML5 Audio Player -->
+        <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-3">
+          <audio id="audioPlayer" controls class="w-full h-10 accent-indigo-500 focus:outline-none"></audio>
+        </div>
+
+        <!-- Result Metrics Grid -->
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+            <span class="text-slate-500 block mb-0.5">Số ký tự:</span>
+            <span id="resChars" class="font-semibold text-slate-200 font-mono">0</span>
+          </div>
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+            <span class="text-slate-500 block mb-0.5">Phân đoạn chunks:</span>
+            <span id="resChunks" class="font-semibold text-slate-200 font-mono">0</span>
+          </div>
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+            <span class="text-slate-500 block mb-0.5">Phong cách:</span>
+            <span id="resStyle" class="font-semibold text-slate-200 capitalize">neutral</span>
+          </div>
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+            <span class="text-slate-500 block mb-0.5">Thời gian xử lý:</span>
+            <span id="resTime" class="font-semibold text-slate-200 font-mono">0.0s</span>
+          </div>
+        </div>
+
+        <!-- Action Download Buttons -->
+        <div class="flex items-center space-x-2 pt-2">
+          <a
+            id="btnDownloadWav"
+            href="#"
+            download="lapque_tts_master.wav"
+            class="flex-1 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition opacity-50 pointer-events-none"
+          >
+            <i class="fa-solid fa-download"></i> Tải WAV (Master)
+          </a>
+          <button
+            id="btnDeleteOutput"
+            class="py-2.5 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition opacity-50 pointer-events-none"
+            title="Xóa file tạm này"
+          >
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Voice Reference Inspector & Uploader -->
+      <div class="glass-card rounded-2xl p-6 shadow-xl space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-waveform-lines text-indigo-400"></i> Bóc Tách Phổ & Nạp Mẫu MP3
+          </h2>
+          <span id="targetStyleBadge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono">
+            Gắn cho: neutral
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Tải lên 1 hoặc <b>nhiều file MP3/WAV</b> của nhân vật. Thuật toán sẽ tự động bóc tách 2048 dải tần Fourier, 4 đỉnh Formant ($F_1-F_4$), đường cong cao độ $F_0$, và đóng gói Faiss Index.
+        </p>
+
+        <label class="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition bg-slate-900/30 group">
+          <input type="file" id="voiceUpload" multiple accept=".wav,.mp3,.m4a,.flac" class="hidden">
+          <i class="fa-solid fa-cloud-arrow-up text-xl text-slate-400 group-hover:text-indigo-400 mb-1 transition"></i>
+          <span class="text-xs font-medium text-slate-300 group-hover:text-white transition">Kéo thả hoặc Chọn nhiều file MP3 / WAV</span>
+          <span class="text-[10px] text-slate-500 mt-0.5">Tự động ghép nối, lọc tạp âm và bóc tách phổ</span>
+        </label>
+
+        <button id="btnOpenCutterBox" onclick="window.openCutterModal && window.openCutterModal()" type="button" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600/30 to-violet-600/30 hover:from-indigo-600/40 hover:to-violet-600/40 text-indigo-200 border border-indigo-500/40 font-semibold text-xs flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
+          <i class="fa-solid fa-scissors text-indigo-400"></i> Mở Trình Cắt Sóng Âm Trực Quan (Waveform Slicer)
+        </button>
+
+        <!-- Upload Analysis Result -->
+        <div id="voiceAnalysisResult" class="hidden bg-slate-900/90 rounded-xl p-4 border border-indigo-500/30 space-y-3 text-xs">
+          <div class="flex items-center justify-between font-semibold text-slate-200">
+            <span id="anFilename" class="truncate max-w-[200px] flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-400 text-[11px]"></i> sample.mp3</span>
+            <span id="anDuration" class="font-mono text-indigo-400">0.0s</span>
+          </div>
+          
+          <!-- Reference Audio Player -->
+          <div class="bg-slate-950/80 p-2 rounded-lg border border-slate-800">
+            <audio id="refAudioPlayer" controls class="w-full h-8 accent-indigo-500"></audio>
+          </div>
+
+          <!-- Detailed Acoustic & Fourier Breakdown Grid -->
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div class="bg-slate-950 p-2 rounded border border-slate-800/80">
+              <span class="text-slate-500 block text-[10px]">Cao độ trung bình F0:</span>
+              <span id="anF0" class="text-indigo-300 font-mono font-semibold">-- Hz</span>
+            </div>
+            <div class="bg-slate-950 p-2 rounded border border-slate-800/80">
+              <span class="text-slate-500 block text-[10px]">Vector Faiss Timbre:</span>
+              <span id="anVectors" class="text-emerald-300 font-mono font-semibold">-- vector</span>
+            </div>
+            <div class="bg-slate-950 p-2 rounded border border-slate-800/80 col-span-2">
+              <span class="text-slate-500 block text-[10px]">Đỉnh Formants Khoang Họng (F1 - F4):</span>
+              <span id="anFormants" class="text-amber-300 font-mono text-[10px]">F1: -- | F2: -- | F3: -- | F4: --</span>
+            </div>
+          </div>
+
+          <div id="anRecommendation" class="text-emerald-400 font-medium pt-1 text-center">Đã bóc tách phổ Fourier & tạo bộ lọc thành công!</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- WAVEFORM AUDIO CUTTER MODAL -->
+  <div id="cutterModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900/95 border border-indigo-500/40 rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+            <i class="fa-solid fa-scissors"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-100 text-sm">Trình Cắt Sóng Âm & Bóc Tách Giọng Mẫu (MP3 Cutter)</h3>
+            <p class="text-[11px] text-slate-400">Chọn chính xác đoạn thoại bạn cần từ file âm thanh dài để nạp trực tiếp vào Style</p>
+          </div>
+        </div>
+        <button id="btnCloseCutterModal" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Upload Long Audio Track -->
+      <div id="cutterUploadArea" class="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition bg-slate-950/50 group">
+        <input type="file" id="cutterFileInput" accept=".mp3,.wav,.m4a,.flac,.ogg" class="hidden">
+        <i class="fa-solid fa-file-audio text-2xl text-slate-400 group-hover:text-indigo-400 mb-1 transition"></i>
+        <span id="cutterUploadText" class="text-xs font-semibold text-slate-200">Bấm để chọn file lồng tiếng / MP3 dài cần cắt</span>
+        <span class="text-[10px] text-slate-500 mt-0.5">Hỗ trợ MP3, WAV từ vài giây đến 30 phút</span>
+      </div>
+
+      <!-- Waveform Canvas Section (Hidden until audio loaded) -->
+      <div id="cutterWaveformSection" class="hidden space-y-4">
+        
+        <!-- Live Playhead Status Readout Banner -->
+        <div id="cutterLiveStatusBanner" class="bg-gradient-to-r from-indigo-950/80 to-slate-950 p-3 rounded-xl border border-indigo-500/30 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" id="cutterLivePulse"></span>
+            <span class="text-slate-400">Đang phát:</span>
+            <span id="cutterLiveTimeReadout" class="font-mono text-emerald-300 font-bold text-sm">00:00.000</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-[11px] font-mono text-slate-300">
+            <span class="text-indigo-400 font-semibold" id="cutterStartBadge">00:00.000</span>
+            <span class="text-slate-600">➔</span>
+            <span class="text-indigo-400 font-semibold" id="cutterEndBadge">00:10.000</span>
+            <span class="px-1.5 py-0.5 rounded bg-indigo-600/30 text-indigo-200 text-[10px] ml-1 font-bold" id="cutterDurBadge">10.0s</span>
+          </div>
+        </div>
+
+        <!-- Canvas Waveform with Touch/Drag Support -->
+        <div class="relative bg-slate-950 rounded-xl p-2 border border-slate-800 overflow-hidden select-none touch-none">
+          <canvas id="waveformCanvas" class="w-full h-32 rounded cursor-pointer block touch-none" style="touch-action: none;"></canvas>
+          <div id="waveformLoading" class="hidden absolute inset-0 bg-slate-950/80 flex items-center justify-center text-xs text-indigo-400 gap-2 font-medium">
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang giải mã và vẽ sóng âm...
+          </div>
+        </div>
+
+        <!-- Time Controls Grid with Mobile Nudge Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-950/80 p-3.5 rounded-xl border border-slate-800/80">
+          
+          <!-- Start Time Control & Nudge -->
+          <div class="space-y-1.5 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+            <div class="flex items-center justify-between">
+              <label class="text-indigo-300 font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-play text-[10px]"></i> BẮT ĐẦU (Start):
+              </label>
+              <span id="startFormattedDisplay" class="font-mono text-slate-400 text-[11px]">00:00.000</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button type="button" id="btnStartMinus1" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 active:bg-indigo-600 text-slate-200 rounded font-mono text-[11px]">-1s</button>
+              <button type="button" id="btnStartMinus01" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 active:bg-indigo-600 text-slate-200 rounded font-mono text-[11px]">-0.1s</button>
+              <input type="number" id="cutterStartInput" step="0.1" min="0" value="0.0" class="flex-1 bg-slate-950 border border-slate-700 rounded p-1.5 font-mono text-center text-indigo-300 font-bold focus:border-indigo-500 text-xs">
+              <button type="button" id="btnStartPlus01" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 active:bg-indigo-600 text-slate-200 rounded font-mono text-[11px]">+0.1s</button>
+              <button type="button" id="btnStartPlus1" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 active:bg-indigo-600 text-slate-200 rounded font-mono text-[11px]">+1s</button>
+            </div>
+          </div>
+
+          <!-- End Time Control & Nudge -->
+          <div class="space-y-1.5 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+            <div class="flex items-center justify-between">
+              <label class="text-rose-300 font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-stop text-[10px]"></i> KẾT THÚC (End):
+              </label>
+              <span id="endFormattedDisplay" class="font-mono text-slate-400 text-[11px]">00:10.000</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button type="button" id="btnEndMinus1" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 active:bg-indigo-600 text-slate-200 rounded font-mono text-[11px]">-1s</button>
+              <button type="button" id="btnEndMinus01" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 active:bg-indigo-600 text-slate-200 rounded font-mono text-[11px]">-0.1s</button>
+              <input type="number" id="cutterEndInput" step="0.1" min="0" value="10.0" class="flex-1 bg-slate-950 border border-slate-700 rounded p-1.5 font-mono text-center text-rose-300 font-bold focus:border-indigo-500 text-xs">
+              <button type="button" id="btnEndPlus01" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 active:bg-indigo-600 text-slate-200 rounded font-mono text-[11px]">+0.1s</button>
+              <button type="button" id="btnEndPlus1" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 active:bg-indigo-600 text-slate-200 rounded font-mono text-[11px]">+1s</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Preview Audio Controls & Strict Stop Indicator -->
+        <div class="flex items-center justify-between bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+          <div class="flex items-center gap-2">
+            <button id="btnPlayCutterSelection" type="button" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition active:scale-95">
+              <i class="fa-solid fa-play" id="playIcon"></i> <span id="btnPlayCutterText">Nghe Thử Đoạn Cắt</span>
+            </button>
+            <button id="btnStopCutter" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-stop"></i> Về Đầu
+            </button>
+          </div>
+          <div class="text-[11px] font-mono text-slate-400 flex items-center gap-1">
+            <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+            <span>Tự động dừng đúng điểm kết</span>
+          </div>
+        </div>
+
+        <!-- Destination Style Choice -->
+        <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
+          <span class="text-slate-300 font-semibold block">Đích Đến Của Giọng Mẫu Đã Cắt:</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 bg-slate-900 p-2.5 rounded-lg border border-slate-800 cursor-pointer hover:border-indigo-500/50">
+              <input type="radio" name="cutterTarget" value="current" checked class="accent-indigo-500">
+              <span class="text-slate-200">Gắn vào Style đang chọn (<b id="cutterCurrentStyleName" class="text-indigo-400">neutral</b>)</span>
+            </label>
+            <label class="flex items-center gap-2 bg-slate-900 p-2.5 rounded-lg border border-slate-800 cursor-pointer hover:border-indigo-500/50">
+              <input type="radio" name="cutterTarget" value="new" class="accent-indigo-500">
+              <span class="text-slate-200">Tạo một Style nhân vật mới</span>
+            </label>
+          </div>
+
+          <!-- New Style Name Input (shown if radio 'new' selected) -->
+          <div id="cutterNewStyleInputs" class="hidden grid grid-cols-2 gap-2 pt-1">
+            <input type="text" id="cutterNewStyleId" placeholder="Mã style (vd: chau_tinh_tri_2)" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:border-indigo-500">
+            <input type="text" id="cutterNewStyleName" placeholder="Tên hiển thị (vd: Châu Tinh Trì La Hét)" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:border-indigo-500">
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button id="btnExecuteSliceAndProfile" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 active:scale-98">
+          <i class="fa-solid fa-scissors"></i>
+          <span id="btnExecuteSliceText">Cắt & Bóc Tách Phổ Nạp Vào Style Ngay</span>
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- AI JUDGE & AUTO-TUNE MODAL -->
+  <div id="autotuneModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900/95 border border-amber-500/40 rounded-2xl max-w-4xl w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 to-orange-500 border border-amber-500/40 flex items-center justify-center text-white shadow-md shadow-amber-500/20">
+            <i class="fa-solid fa-scale-balanced"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-100 text-sm flex items-center gap-2">
+              Phòng Thí Nghiệm Tự Học & AI Giám Khảo Chấm Điểm
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-normal border border-amber-500/30">10 Tiêu Chí Chuẩn 100đ</span>
+              <span id="atModelTrainedBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">🧠 Model Nơ-ron Sẵn Sàng</span>
+            </h3>
+            <p class="text-[11px] text-slate-400">Giám Khảo phân tích sâu 10 chỉ số âm học & Học Sinh tự động chỉnh sửa lặp qua các vòng</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnTrainVoiceIndex" type="button" class="px-3 py-1.5 rounded-lg bg-indigo-900/60 hover:bg-indigo-800 text-indigo-200 border border-indigo-500/40 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
+            <i class="fa-solid fa-graduation-cap text-indigo-400" id="iconTrainIndex"></i>
+            <span id="btnTrainIndexText">Huấn Luyện AI (Index)</span>
+          </button>
+          <button id="btnCloseAutoTuneModal" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center transition">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls & Configurations -->
+      <div class="space-y-2.5 bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 text-xs">
+        
+        <!-- Row 1: Test Spoken Sentence -->
+        <div>
+          <label class="block text-slate-300 mb-1 text-[11px] font-semibold flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-microphone-lines text-amber-400"></i> Câu Nói Cho BOT Học Sinh Đọc Để Giám Khảo Chấm Điểm:</span>
+            <span class="text-[10px] text-slate-500 font-normal">Tiếng Việt chuẩn</span>
+          </label>
+          <input type="text" id="atTestTextInput" value="Xin chào, đây là bài kiểm tra chất giọng lồng tiếng của tôi." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-amber-200 font-medium focus:border-amber-500 shadow-inner">
+        </div>
+
+        <!-- Row 2: User Prompt / Reminder for Judge & Student -->
+        <div>
+          <label class="block text-slate-300 mb-1 text-[11px] font-semibold flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-comment-dots text-indigo-400"></i> Nhắc Nhở & Hướng Dẫn Của Bạn Cho Giám Khảo & Học Sinh:</span>
+            <span class="text-[10px] text-slate-500 font-normal">Tự động dịch sang thước đo âm học</span>
+          </label>
+          <input type="text" id="atUserInstructionInput" placeholder="Ví dụ: Giọng cần trầm ấm hơn một chút, bớt tiếng the thé, nói có hồn hơn..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:border-indigo-500">
+          
+          <!-- Live AI Acoustic Translation Card -->
+          <div id="atPromptTranslationCard" class="hidden mt-1.5 p-2 rounded-lg bg-indigo-950/50 border border-indigo-500/30 text-[11px] text-indigo-300 flex items-start gap-2 animate-in fade-in">
+            <i class="fa-solid fa-wand-magic-sparkles text-indigo-400 mt-0.5"></i>
+            <div>
+              <span class="font-bold text-slate-200">AI Biên Dịch Âm Học (Thước Đo Vật Lý):</span>
+              <span id="atPromptTranslationText" class="text-slate-300 ml-1">...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: Target Sample Selector, Rounds, Start Button -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 pt-1">
+          <div class="md:col-span-4">
+            <label class="block text-slate-400 mb-1 text-[11px] font-medium flex items-center gap-1">
+              <i class="fa-solid fa-file-audio text-amber-400"></i> File MP3 Làm Thang Mẫu:
+            </label>
+            <select id="atSampleSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 font-mono text-slate-200 font-medium focus:border-amber-500 text-xs">
+              <option value="">Đang tải danh sách mẫu...</option>
+            </select>
+          </div>
+          <div class="md:col-span-3">
+            <label class="block text-slate-400 mb-1 text-[11px] font-medium">Số Vòng Tự Học Lặp:</label>
+            <select id="atMaxRounds" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 font-mono text-slate-200 font-medium focus:border-amber-500 text-xs">
+              <option value="3">3 Vòng (Nhanh - ~12s)</option>
+              <option value="5" selected>5 Vòng (Chuẩn Phòng Thu - ~20s)</option>
+              <option value="8">8 Vòng (Tối Ưu Sâu - ~35s)</option>
+            </select>
+          </div>
+          <div class="md:col-span-5 flex items-end">
+            <button id="btnRunAutoTune" type="button" class="w-full py-2 px-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold text-xs shadow-lg shadow-orange-600/30 transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer">
+              <i class="fa-solid fa-play" id="atPlayIcon"></i>
+              <span id="atBtnText">Bắt Đầu Chấm Điểm & Tự Học</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scoreboard Dashboard -->
+      <div id="atDashboardSection" class="space-y-3.5">
+        
+        <!-- Main Score Card -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+          
+          <!-- Big Score Gauge -->
+          <div class="md:col-span-4 bg-gradient-to-b from-slate-950 to-amber-950/30 p-4 rounded-xl border border-amber-500/30 flex flex-col items-center justify-center text-center space-y-2">
+            <span class="text-xs text-slate-400 font-medium">ĐIỂM TỔNG HỢP CỦA GIÁM KHẢO</span>
+            <div class="text-4xl font-extrabold font-mono text-amber-300 flex items-baseline gap-1" id="atTotalScoreDisplay">
+              <span>--</span><span class="text-lg text-slate-500 font-normal">/100</span>
+            </div>
+            <div id="atVerdictBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              SẴN SÀNG CHẤM ĐIỂM
+            </div>
+            <div class="text-[11px] text-slate-400 pt-1" id="atRoundStatusText">Chưa kích hoạt vòng lặp</div>
+          </div>
+
+          <!-- 10 Detailed Sub-Score Metrics (2 Columns) -->
+          <div class="md:col-span-8 bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs">
+            <span class="text-slate-300 font-semibold block text-[11px]">BẢNG 10 TIÊU CHÍ CHI TIẾT CỦA GIÁM KHẢO:</span>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-2 text-[10px]">
+              
+              <!-- 1. Timbre -->
+              <div class="space-y-0.5">
+                <div class="flex justify-between text-slate-300">
+                  <span>1. Âm sắc ContentVec (20đ):</span>
+                  <span class="font-mono font-bold text-indigo-400" id="atScoreTimbre">-- / 20.0</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                  <div id="atBarTimbre" class="bg-indigo-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- 2. Spectral Envelope -->
+              <div class="space-y-0.5">
+                <div class="flex justify-between text-slate-300">
+                  <span>2. Khớp phổ phong cách (15đ):</span>
+                  <span class="font-mono font-bold text-cyan-400" id="atScoreSpecEnv">-- / 15.0</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                  <div id="atBarSpecEnv" class="bg-cyan-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- 3. Pitch Mean F0 -->
+              <div class="space-y-0.5">
+                <div class="flex justify-between text-slate-300">
+                  <span>3. Cao độ F0 chuẩn (15đ):</span>
+                  <span class="font-mono font-bold text-emerald-400" id="atScorePitchMean">-- / 15.0</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                  <div id="atBarPitchMean" class="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- 4. Pitch Dynamics -->
+              <div class="space-y-0.5">
+                <div class="flex justify-between text-slate-300">
+                  <span>4. Biến thiên & Ngữ điệu (10đ):</span>
+                  <span class="font-mono font-bold text-teal-400" id="atScorePitchDyn">-- / 10.0</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                  <div id="atBarPitchDyn" class="bg-teal-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- 5. Formant F1 -->
+              <div class="space-y-0.5">
+                <div class="flex justify-between text-slate-300">
+                  <span>5. Formant F1 Vòm họng (10đ):</span>
+                  <span class="font-mono font-bold text-amber-400" id="atScoreF1">-- / 10.0</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                  <div id="atBarF1" class="bg-amber-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- 6. Formant F2 -->
+              <div class="space-y-0.5">
+                <div class="flex justify-between text-slate-300">
+                  <span>6. Formant F2 Trung âm (10đ):</span>
+                  <span class="font-mono font-bold text-orange-400" id="atScoreF2">-- / 10.0</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                  <div id="atBarF2" class="bg-orange-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- 7. Formant F3-F4 -->
+              <div class="space-y-0.5">
+                <div class="flex justify-between text-slate-300">
+                  <span>7. Formant F3-F4 Cá tính (5đ):</span>
+                  <span class="font-mono font-bold text-pink-400" id="atScoreF3F4">-- / 5.0</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                  <div id="atBarF3F4" class="bg-pink-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- 8. HNR Clarity -->
+              <div class="space-y-0.5">
+                <div class="flex justify-between text-slate-300">
+                  <span>8. Độ trong trẻo HNR (5đ):</span>
+                  <span class="font-mono font-bold text-emerald-300" id="atScoreHnr">-- / 5.0</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                  <div id="atBarHnr" class="bg-emerald-400 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- 9. Anti-Crackle -->
+              <div class="space-y-0.5">
+                <div class="flex justify-between text-slate-300">
+                  <span>9. Khử rè dải cao (5đ):</span>
+                  <span class="font-mono font-bold text-violet-400" id="atScoreAntiCrackle">-- / 5.0</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                  <div id="atBarAntiCrackle" class="bg-violet-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- 10. Energy Balance -->
+              <div class="space-y-0.5">
+                <div class="flex justify-between text-slate-300">
+                  <span>10. Cân bằng năng lượng (5đ):</span>
+                  <span class="font-mono font-bold text-blue-400" id="atScoreEnergyBal">-- / 5.0</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                  <div id="atBarEnergyBal" class="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Round History Cards & Critique Notes -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          
+          <!-- Round-by-Round Progression List -->
+          <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs">
+            <span class="text-slate-300 font-semibold block text-[11px] flex items-center justify-between">
+              <span>LỊCH SỬ TIẾN HÓA QUA CÁC VÒNG:</span>
+              <span class="text-[10px] text-slate-500">Bấm từng vòng để nghe thử</span>
+            </span>
+            <div id="atRoundsList" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+              <div class="text-slate-500 italic text-center py-4 text-xs">Chưa có dữ liệu vòng lặp...</div>
+            </div>
+          </div>
+
+          <!-- Live Judge Critique Log -->
+          <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs">
+            <span class="text-slate-300 font-semibold block text-[11px] flex items-center gap-1.5">
+              <i class="fa-solid fa-clipboard-check text-amber-400"></i>
+              <span>NHẬT KÝ SỬA BÀI CỦA GIÁM KHẢO:</span>
+            </span>
+            <div id="atCritiqueLog" class="space-y-1.5 max-h-40 overflow-y-auto pr-1 text-slate-300">
+              <div class="text-slate-500 italic text-center py-4 text-xs">Giám khảo đang chờ bài nộp...</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Audio Comparison Player & Dual Actions -->
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2.5 w-full sm:w-auto">
+            <span class="text-slate-400 font-semibold flex items-center gap-1.5 whitespace-nowrap">
+              <i class="fa-solid fa-volume-high text-amber-400"></i> Nghe Thử Bản Đọc Của Vòng Này:
+            </span>
+            <audio id="atAudioPlayer" controls class="h-8 accent-amber-500 w-full sm:max-w-xs"></audio>
+          </div>
+          
+          <!-- Dual Actions: Continue Tune & Save Preset -->
+          <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <!-- Continue Tune Button (Chưa Đạt) -->
+            <button id="btnContinueAutoTune" type="button" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 hover:border-amber-500 font-semibold text-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+              <i class="fa-solid fa-rotate-right" id="atContinueIcon"></i>
+              <span id="atContinueText">🔄 Chưa Đạt - Tối Ưu Thêm 5 Vòng</span>
+            </button>
+
+            <!-- Save Button -->
+            <button id="btnSaveOptimalPreset" type="button" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span id="btnSavePresetText">Đồng Ý & Lưu Bộ Lọc Này</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800/80 bg-slate-950 py-4 text-center text-xs text-slate-500">
+    <div class="max-w-6xl mx-auto px-4">
+      LAPQUE Personal Vietnamese TTS Studio • Thiết kế độc quyền cho 1 người dùng • 0 đồng • Tuân thủ bản quyền độc lập
+    </div>
+  </footer>
+
+  <script src="/app.js?v=20260825_neural_trainer_v2"></script>
+</body>
+</html>
+
+

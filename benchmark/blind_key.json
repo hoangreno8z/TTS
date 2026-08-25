@@ -1,0 +1,82 @@
+{
+  "sentence_01": {
+    "sample_A": "gpt-sovits",
+    "sample_B": "f5-tts"
+  },
+  "sentence_02": {
+    "sample_A": "f5-tts",
+    "sample_B": "gpt-sovits"
+  },
+  "sentence_03": {
+    "sample_A": "gpt-sovits",
+    "sample_B": "f5-tts"
+  },
+  "sentence_04": {
+    "sample_A": "f5-tts",
+    "sample_B": "gpt-sovits"
+  },
+  "sentence_05": {
+    "sample_A": "f5-tts",
+    "sample_B": "gpt-sovits"
+  },
+  "sentence_06": {
+    "sample_A": "gpt-sovits",
+    "sample_B": "f5-tts"
+  },
+  "sentence_07": {
+    "sample_A": "gpt-sovits",
+    "sample_B": "f5-tts"
+  },
+  "sentence_08": {
+    "sample_A": "f5-tts",
+    "sample_B": "gpt-sovits"
+  },
+  "sentence_09": {
+    "sample_A": "f5-tts",
+    "sample_B": "gpt-sovits"
+  },
+  "sentence_10": {
+    "sample_A": "f5-tts",
+    "sample_B": "gpt-sovits"
+  },
+  "sentence_11": {
+    "sample_A": "gpt-sovits",
+    "sample_B": "f5-tts"
+  },
+  "sentence_12": {
+    "sample_A": "gpt-sovits",
+    "sample_B": "f5-tts"
+  },
+  "sentence_13": {
+    "sample_A": "gpt-sovits",
+    "sample_B": "f5-tts"
+  },
+  "sentence_14": {
+    "sample_A": "f5-tts",
+    "sample_B": "gpt-sovits"
+  },
+  "sentence_15": {
+    "sample_A": "f5-tts",
+    "sample_B": "gpt-sovits"
+  },
+  "sentence_16": {
+    "sample_A": "gpt-sovits",
+    "sample_B": "f5-tts"
+  },
+  "sentence_17": {
+    "sample_A": "gpt-sovits",
+    "sample_B": "f5-tts"
+  },
+  "sentence_18": {
+    "sample_A": "gpt-sovits",
+    "sample_B": "f5-tts"
+  },
+  "sentence_19": {
+    "sample_A": "f5-tts",
+    "sample_B": "gpt-sovits"
+  },
+  "sentence_20": {
+    "sample_A": "gpt-sovits",
+    "sample_B": "f5-tts"
+  }
+}

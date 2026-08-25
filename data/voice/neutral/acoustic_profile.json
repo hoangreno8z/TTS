@@ -1,0 +1,13 @@
+{
+  "mean_pitch_hz": 220.2,
+  "pitch_shift_semitones": 6.0,
+  "formant_shift_ratio": 0.8,
+  "spectral_centroid_hz": 445.6,
+  "rms_energy": 0.2158,
+  "crest_factor": 1.41,
+  "eq_profile": {
+    "bass_db": 6.0,
+    "mid_db": 2.0,
+    "treble_db": -3.0
+  }
+}

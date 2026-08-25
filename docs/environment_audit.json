@@ -1,0 +1,33 @@
+{
+  "os": {
+    "system": "Windows",
+    "release": "10",
+    "version": "10.0.19045",
+    "machine": "AMD64",
+    "architecture": "64bit"
+  },
+  "python": {
+    "executable": "C:\\Users\\ADMIN\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "version": "3.12.10",
+    "version_full": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]"
+  },
+  "pip": "pip 26.1.2 from C:\\Users\\ADMIN\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\pip (python 3.12)",
+  "ffmpeg": {
+    "installed": false,
+    "path": null,
+    "version": null
+  },
+  "disk": {
+    "total_gb": 110.96,
+    "used_gb": 93.91,
+    "free_gb": 17.05
+  },
+  "nvidia_smi": {
+    "available": false,
+    "details": "nvidia-smi not found in PATH"
+  },
+  "pytorch": {
+    "installed": false,
+    "error": "PyTorch is not installed in the current Python environment"
+  }
+}

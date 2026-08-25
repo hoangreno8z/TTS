@@ -1,0 +1,67 @@
+{
+  "version": "V7.0",
+  "name": "LAPQUE V7 — 30 HELD-OUT VIETNAMESE BENCHMARK SUITE",
+  "total_sentences": 30,
+  "categories": {
+    "complex_vowels": {
+      "name": "Nhóm 1: Vần Phức & Nguyên Âm Đôi/Ba",
+      "sentences": [
+        "Con đường quanh co uốn khúc ngoằn ngoèo đưa chúng tôi đến thung lũng rực rỡ.",
+        "Chú bé khoác chiếc áo khoác xanh, ngồi bệt bên bậu cửa nhìn đàn bướm lượn.",
+        "Dưới ánh nắng khuya khoắt, ánh trăng loang loáng phản chiếu trên mặt hồ phẳng lặng.",
+        "Những chiếc thuyền buồm rẽ sóng vượt qua vùng biển động đầy hiểm nguy.",
+        "Tiếng chim hót lảnh lót giữa vòm lá xanh mướt làm bừng sáng cả không gian."
+      ]
+    },
+    "difficult_onsets": {
+      "name": "Nhóm 2: Âm Đầu Khó & Phụ Âm Phức Hợp (/tr/, /ch/, /r/, /gi/, /ng/)",
+      "sentences": [
+        "Nguyễn Hoài Nam vừa hoàn thành thủ tục xuất nhập khẩu hàng hóa tại cảng Hải Phòng.",
+        "Trăng tròn trôi trên rặng tre già râm ran tiếng ve sầu gọi hè.",
+        "Nghệ thuật điêu khắc gỗ truyền thống đòi hỏi sự kiên nhẫn và đôi bàn tay khéo léo.",
+        "Rừng tràm bạt ngàn rộn rã ríu rít tiếng chim ríu ran gọi bầy.",
+        "Giọt sương mai đọng trên cánh hoa giang giở chút hương thầm dịu êm."
+      ]
+    },
+    "tone_contrast": {
+      "name": "Nhóm 3: Đối Kháng Thanh Điệu (Hỏi vs Ngã vs Nặng)",
+      "sentences": [
+        "Bạn hãy giữ vững ý chí, vượt qua mọi nỗi gian truân và khó khăn thử thách.",
+        "Kỷ niệm xưa cũ bỗng ùa về trong một buổi chiều thu yên ả và lộng gió.",
+        "Sự hiểu biết sâu rộng cùng lòng kiên nhẫn sẽ mở ra những cơ hội vĩ đại.",
+        "Những bãi cỏ xanh mướt trải dài vô tận dưới chân dãy núi hùng vĩ.",
+        "Cơn bão dữ dội đã đi qua, để lại bầu trời trong trẻo và sạch sẽ."
+      ]
+    },
+    "dramatic_dialogue": {
+      "name": "Nhóm 4: Hội Thoại Kịch Tính & Biểu Cảm",
+      "sentences": [
+        "Những lời lẽ đê tiện như vậy mà ngươi cũng dám nói ra được hay sao hả?",
+        "Tuyệt vời quá! Chúng ta đã hoàn thành xuất sắc mục tiêu đề ra rồi!",
+        "Ngươi nghĩ rằng có thể dễ dàng qua mặt được ta trong chuyện này ư?",
+        "Đừng bao giờ bỏ cuộc khi ngọn lửa đam mê vẫn còn bùng cháy trong tim!",
+        "Trời ơi, làm sao mà chuyện kỳ lạ đến mức này lại có thể xảy ra được chứ?"
+      ]
+    },
+    "entities_and_numbers": {
+      "name": "Nhóm 5: Số Liệu, Ngày Tháng, Đơn Vị & Viết Tắt",
+      "sentences": [
+        "Dự án đạt tăng trưởng 15.5% trong quý 3 năm 2026 với tổng doanh thu 120 tỷ đồng.",
+        "Các chuyên gia công nghệ AI tại TP. Hồ Chí Minh vừa công bố báo cáo mới lúc 14:30.",
+        "Nhiệt độ trung bình tại khu vực miền Trung dao động từ 28 đến 34 độ C.",
+        "Vui lòng liên hệ số hotline 0987.654.321 hoặc gửi email về support@lapque.vn.",
+        "Tuyến cao tốc dài 1.250 km đã chính thức thông xe vào ngày 02/09/2026."
+      ]
+    },
+    "coarticulation_stress": {
+      "name": "Nhóm 6: Âm Trắc Nghiệm Cực Hạn (Stress Test & Coarticulation)",
+      "sentences": [
+        "Khúc khuỷu quanh co luồn qua khe suối róc rách giữa đại ngàn u tịch.",
+        "Bà ba béo bán bánh bèo bên bờ biển bị bom bi bắn bể bụng.",
+        "Nồi đồng nấu ốc, nồi đất nấu ếch, ông nấu ốc lột vỏ ông nấu ếch lột da.",
+        "Vừa bước chân vào cổng làng, mùi hương lúa mới thơm ngào ngạt phả vào mặt.",
+        "Chặng đường phía trước còn nhiều điều thú vị đang chờ đón chúng ta cùng khám phá."
+      ]
+    }
+  }
+}

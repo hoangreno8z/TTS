@@ -1,0 +1,231 @@
+{
+  "engine": "f5-tts",
+  "date": "2026-08-24",
+  "total_sentences": 20,
+  "total_characters": 2063,
+  "reference_audio": "dummy_ref.wav",
+  "is_local_gpu": false,
+  "summary_status": "Benchmark definitions and adapter verified. Ready for Colab T4 GPU execution.",
+  "sentences": [
+    {
+      "id": 1,
+      "category": "câu ngắn",
+      "raw_text": "Xin chào, tôi là trợ lý giọng nói tiếng Việt cá nhân của bạn.",
+      "normalized_text": "Xin chào, tôi là trợ lý giọng nói tiếng Việt cá nhân của bạn.",
+      "char_count": 61,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_01.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": 2,
+      "category": "câu ngắn",
+      "raw_text": "Hôm nay thời tiết thật là đẹp và trong lành.",
+      "normalized_text": "Hôm nay thời tiết thật là đẹp và trong lành.",
+      "char_count": 44,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_02.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": 3,
+      "category": "câu hỏi",
+      "raw_text": "Bạn có thể cho tôi biết dự báo thời tiết ngày mai ở Hà Nội thế nào không?",
+      "normalized_text": "Bạn có thể cho tôi biết dự báo thời tiết ngày mai ở Hà Nội thế nào không?",
+      "char_count": 73,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_03.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.001,
+      "error": null
+    },
+    {
+      "id": 4,
+      "category": "câu hỏi",
+      "raw_text": "Liệu công nghệ tổng hợp giọng nói có thể thay thế hoàn toàn con người?",
+      "normalized_text": "Liệu công nghệ tổng hợp giọng nói có thể thay thế hoàn toàn con người?",
+      "char_count": 70,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_04.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.001,
+      "error": null
+    },
+    {
+      "id": 5,
+      "category": "câu cảm thán",
+      "raw_text": "Ôi, khung cảnh hoàng hôn trên bờ biển Phú Quốc tuyệt vời quá!",
+      "normalized_text": "Ôi, khung cảnh hoàng hôn trên bờ biển Phú Quốc tuyệt vời quá!",
+      "char_count": 61,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_05.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.001,
+      "error": null
+    },
+    {
+      "id": 6,
+      "category": "câu cảm thán",
+      "raw_text": "Thật không thể tin được là hệ thống xử lý nhanh đến như vậy!",
+      "normalized_text": "Thật không thể tin được là hệ thống xử lý nhanh đến như vậy!",
+      "char_count": 60,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_06.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": 7,
+      "category": "số",
+      "raw_text": "Năm 2026, dân số khu vực đạt khoảng 1.250.000 người với 350 hộ gia đình.",
+      "normalized_text": "Năm hai nghìn không trăm hai mươi sáu, dân số khu vực đạt khoảng một triệu hai trăm năm mươi nghìn người với ba trăm năm mươi hộ gia đình.",
+      "char_count": 72,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_07.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.001,
+      "error": null
+    },
+    {
+      "id": 8,
+      "category": "số & tiền tệ",
+      "raw_text": "Mỗi chiếc vé xem phim có giá 120.000 VNĐ, tổng cộng hết 600k cho 5 người.",
+      "normalized_text": "Mỗi chiếc vé xem phim có giá một trăm hai mươi nghìn đồng, tổng cộng hết sáu trăm nghìn đồng cho năm người.",
+      "char_count": 73,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_08.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.001,
+      "error": null
+    },
+    {
+      "id": 9,
+      "category": "ngày tháng & thời gian",
+      "raw_text": "Vào ngày 24/08/2026, hội nghị khoa học quốc tế sẽ chính thức khai mạc lúc 8 giờ sáng.",
+      "normalized_text": "Vào ngày hai mươi tư tháng tám năm hai nghìn không trăm hai mươi sáu, hội nghị khoa học quốc tế sẽ chính thức khai mạc lúc tám giờ sáng.",
+      "char_count": 85,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_09.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": 10,
+      "category": "tỷ lệ phần trăm",
+      "raw_text": "Doanh thu quý này tăng trưởng 18.5%, vượt 5% so với chỉ tiêu ban đầu đề ra.",
+      "normalized_text": "Doanh thu quý này tăng trưởng mười tám phẩy năm phần trăm, vượt năm phần trăm so với chỉ tiêu ban đầu đề ra.",
+      "char_count": 75,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_10.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": 11,
+      "category": "tên riêng Việt Nam",
+      "raw_text": "Giáo sư Nguyễn Du, tác giả Truyện Kiều, là danh nhân văn hóa lỗi lạc của dân tộc.",
+      "normalized_text": "Giáo sư Nguyễn Du, tác giả Truyện Kiều, là danh nhân văn hóa lỗi lạc của dân tộc.",
+      "char_count": 81,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_11.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": 12,
+      "category": "tên riêng & địa danh",
+      "raw_text": "Đoàn công tác đã đi qua Đà Nẵng, Nha Trang, TP.HCM và dừng chân tại Cần Thơ.",
+      "normalized_text": "Đoàn công tác đã đi qua Đà Nẵng, Nha Trang, Thành phố Hồ Chí Minh và dừng chân tại Cần Thơ.",
+      "char_count": 76,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_12.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.001,
+      "error": null
+    },
+    {
+      "id": 13,
+      "category": "thanh điệu hỏi / ngã",
+      "raw_text": "Chúng ta cần bảo đảm tính chuẩn xác trong việc giữ gìn sự trong sáng của chữ nghĩa tiếng Việt.",
+      "normalized_text": "Chúng ta cần bảo đảm tính chuẩn xác trong việc giữ gìn sự trong sáng của chữ nghĩa tiếng Việt.",
+      "char_count": 94,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_13.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.001,
+      "error": null
+    },
+    {
+      "id": 14,
+      "category": "thanh điệu hỏi / ngã",
+      "raw_text": "Những suy nghĩ vĩ đại luôn khởi nguồn từ những trăn trở, nỗ lực và sự kiên trì không ngừng nghỉ.",
+      "normalized_text": "Những suy nghĩ vĩ đại luôn khởi nguồn từ những trăn trở, nỗ lực và sự kiên trì không ngừng nghỉ.",
+      "char_count": 96,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_14.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": 15,
+      "category": "viết tắt & chức danh",
+      "raw_text": "PGS.TS Lê Văn C cùng BS. Trần Thị D đã công bố kết quả nghiên cứu y khoa mới.",
+      "normalized_text": "Phó giáo sư Tiến sĩ Lê Văn C cùng Bác sĩ Trần Thị D đã công bố kết quả nghiên cứu y khoa mới.",
+      "char_count": 77,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_15.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": 16,
+      "category": "câu nhiều dấu phẩy & ngắt nhịp",
+      "raw_text": "Sách là kho tàng tri thức, là người bạn tâm giao, soi sáng con đường học vấn, bồi dưỡng tâm hồn và mở rộng tầm nhìn cho mỗi chúng ta.",
+      "normalized_text": "Sách là kho tàng tri thức, là người bạn tâm giao, soi sáng con đường học vấn, bồi dưỡng tâm hồn và mở rộng tầm nhìn cho mỗi chúng ta.",
+      "char_count": 133,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_16.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.001,
+      "error": null
+    },
+    {
+      "id": 17,
+      "category": "câu phức đối thoại",
+      "raw_text": "Anh ấy quay sang nhìn tôi, mỉm cười rồi khẽ nói: Hãy vững tin vào con đường mà bạn đã chọn lựa.",
+      "normalized_text": "Anh ấy quay sang nhìn tôi, mỉm cười rồi khẽ nói, Hãy vững tin vào con đường mà bạn đã chọn lựa.",
+      "char_count": 95,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_17.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.001,
+      "error": null
+    },
+    {
+      "id": 18,
+      "category": "câu dài ngữ điệu",
+      "raw_text": "Trải qua hàng ngàn năm lịch sử dựng nước và giữ nước, tinh thần đoàn kết, ý chí tự lực tự cường và lòng yêu nước nồng nàn luôn là nguồn sức mạnh to lớn đưa dân tộc Việt Nam vượt qua mọi thử thách.",
+      "normalized_text": "Trải qua hàng ngàn năm lịch sử dựng nước và giữ nước, tinh thần đoàn kết, ý chí tự lực tự cường và lòng yêu nước nồng nàn luôn là nguồn sức mạnh to lớn đưa dân tộc Việt Nam vượt qua mọi thử thách.",
+      "char_count": 196,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_18.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.001,
+      "error": null
+    },
+    {
+      "id": 19,
+      "category": "từ mượn quốc tế",
+      "raw_text": "Công nghệ AI, thuật toán Deep Learning và kiến trúc Transformer đang định hình lại tương lai của ngành xử lý ngôn ngữ tự nhiên.",
+      "normalized_text": "Công nghệ AI, thuật toán Deep Learning và kiến trúc Transformer đang định hình lại tương lai của ngành xử lý ngôn ngữ tự nhiên.",
+      "char_count": 127,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_19.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": 20,
+      "category": "đoạn văn 500 ký tự",
+      "raw_text": "Mùa thu Hà Nội luôn mang một vẻ đẹp dịu dàng và trầm mặc rất riêng. Khi những cơn gió heo may đầu mùa thổi qua từng góc phố cổ, mùi hoa sữa thoang thoảng quyện trong không gian se lạnh khiến lòng người bâng khuâng khó tả. Những hàng cây cơm nguội vàng, cây bàng lá đỏ soi bóng xuống mặt nước Hồ Gươm phẳng lặng, tạo nên bức tranh thiên nhiên tuyệt mỹ mà bất cứ ai từng ghé thăm thủ đô cũng không thể nào quên được.",
+      "normalized_text": "Mùa thu Hà Nội luôn mang một vẻ đẹp dịu dàng và trầm mặc rất riêng. Khi những cơn gió heo may đầu mùa thổi qua từng góc phố cổ, mùi hoa sữa thoang thoảng quyện trong không gian se lạnh khiến lòng người bâng khuâng khó tả. Những hàng cây cơm nguội vàng, cây bàng lá đỏ soi bóng xuống mặt nước Hồ Gươm phẳng lặng, tạo nên bức tranh thiên nhiên tuyệt mỹ mà bất cứ ai từng ghé thăm thủ đô cũng không thể nào quên được.",
+      "char_count": 414,
+      "output_audio": "C:\\Users\\ADMIN\\Desktop\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\LAPQUE_TTS_VIETNAMESE_ANTIGRAVITY\\benchmark\\audio\\f5_tts\\f5_bench_20.wav",
+      "status": "ready_for_colab_gpu",
+      "latency_seconds": 0.001,
+      "error": null
+    }
+  ]
+}
