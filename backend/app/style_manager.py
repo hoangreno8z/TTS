@@ -31,8 +31,8 @@ DEFAULT_STYLES: Dict[str, StyleProfile] = {
         description="Mô hình nơ-ron VITS ONNX chuẩn giọng miền Tây",
         speed=1.0,
         pause_multiplier=1.0,
-        pitch_adjustment=2.0,
-        energy_adjustment=1.05,
+        pitch_adjustment=0.0,
+        energy_adjustment=1.0,
         prompt_context="[Phong cách Miền Tây]",
         ref_audio_subfolder="giong_mien_tay_huy_hoang"
     ),

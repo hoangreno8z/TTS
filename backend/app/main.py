@@ -271,34 +271,6 @@ async def synthesize(req: TTSRequest):
             }
             chosen_voice = voice_map.get(style_profile.style_id, "vi-VN-NamMinhNeural")
 
-        # 0. Check if an independent ONNX TTS Model exists for this style
-        try:
-            from .audio.onnx_tts_engine import ONNXTTSBackend
-            onnx_engine = ONNXTTSBackend.get_instance()
-            onnx_out_filename = f"{session_id}_onnx.wav"
-            onnx_out_path = os.path.join(OUTPUTS_DIR, onnx_out_filename)
-            
-            onnx_success = onnx_engine.synthesize(
-                text=norm_text,
-                style_id=style_profile.style_id,
-                output_wav_path=onnx_out_path
-            )
-            if onnx_success and os.path.exists(onnx_out_path) and os.path.getsize(onnx_out_path) > 1000:
-                elapsed = round(time.time() - t0, 2)
-                return TTSResponse(
-                    status="success",
-                    message="Text synthesized successfully via independent ONNX VITS Engine.",
-                    audio_file=onnx_out_filename,
-                    audio_url=f"/outputs/{onnx_out_filename}",
-                    total_characters=len(norm_text),
-                    total_chunks=1,
-                    style=style_profile.style_id,
-                    engine=f"onnx-vits-{style_profile.style_id}",
-                    elapsed_seconds=elapsed
-                )
-        except Exception as onnx_err:
-            print(f"ONNX check notice: {onnx_err}")
-
         rate_pct = int((speed - 1.0) * 100)
         rate_str = f"{rate_pct:+d}%" if rate_pct != 0 else "+0%"
         
