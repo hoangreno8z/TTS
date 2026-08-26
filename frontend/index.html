@@ -35,11 +35,11 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
 
-  <!-- Header -->
-  <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur sticky top-0 z-50 shadow-sm">
+  <!-- Header (Static/Relative - Không trượt theo trang khi lướt) -->
+  <header class="relative border-b border-slate-800/80 bg-slate-900/90 shadow-sm">
     <div class="max-w-6xl mx-auto px-3 sm:px-4 h-16 flex items-center justify-between gap-2">
       
-      <!-- Brand Logo & Contact -->
+      <!-- Brand Logo & Contact (Left Corner) -->
       <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
         <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
           <i class="fa-solid fa-microphone-lines text-white text-base sm:text-lg"></i>
@@ -54,25 +54,43 @@
         </div>
       </div>
       
-      <!-- Action Tools (Slim, Compact Pill Buttons for Mobile & Desktop) -->
-      <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
-        <button id="btnOpenDenoiserHeader" onclick="window.openDenoiserModal && window.openDenoiserModal()" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-semibold text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95 cursor-pointer" title="Tách giọng & khử tạp âm, nhạc nền">
-          <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i> <span>Tách Nhiễu</span>
+      <!-- Single Tools Dropdown Menu (Top Right Corner) -->
+      <div class="relative shrink-0 flex items-center gap-2">
+        <button id="btnHeaderToolsMenu" onclick="window.toggleToolsMenu && window.toggleToolsMenu()" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs border border-slate-700 flex items-center gap-2 shadow-md transition active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-bars text-indigo-400"></i>
+          <span>Menu Công Cụ</span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
         </button>
 
-        <button id="btnOpenAutoTuneHeader" onclick="window.openAutoTuneModal && window.openAutoTuneModal()" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-semibold text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
-          <i class="fa-solid fa-graduation-cap text-[11px]"></i> <span>Huấn Luyện</span>
-        </button>
-        
-        <button id="btnOpenCutterHeader" onclick="window.openCutterModal && window.openCutterModal()" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-indigo-100 border border-indigo-500/30 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
-          <i class="fa-solid fa-scissors text-[11px]"></i> <span>Cắt MP3</span>
-        </button>
-        
-        <button id="btnServerConfigHeader" onclick="window.openServerSettings && window.openServerSettings()" class="flex items-center space-x-1 px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-slate-800/90 text-slate-300 border border-slate-700 hover:border-indigo-500/50 cursor-pointer transition active:scale-95" title="Bấm để kiểm tra / đổi địa chỉ máy chủ Backend AI">
-          <span id="backendPulse" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="backendStatusText" class="hidden sm:inline">Máy chủ AI</span>
-        </button>
+        <!-- Dropdown Popup Menu -->
+        <div id="headerToolsDropdown" class="hidden absolute right-0 top-12 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-1.5 z-50 space-y-1">
+          <button id="btnOpenDenoiserHeader" onclick="window.openDenoiserModal && window.openDenoiserModal(); window.closeToolsMenu && window.closeToolsMenu();" type="button" class="w-full text-left px-3 py-2.5 rounded-lg text-xs font-semibold text-teal-300 hover:bg-teal-500/15 flex items-center gap-2.5 transition cursor-pointer">
+            <i class="fa-solid fa-wand-magic-sparkles text-teal-400 w-4 text-center"></i>
+            <span>Tách Nhiễu</span>
+          </button>
+          
+          <button id="btnOpenAutoTuneHeader" onclick="window.openAutoTuneModal && window.openAutoTuneModal(); window.closeToolsMenu && window.closeToolsMenu();" type="button" class="w-full text-left px-3 py-2.5 rounded-lg text-xs font-semibold text-amber-300 hover:bg-amber-500/15 flex items-center gap-2.5 transition cursor-pointer">
+            <i class="fa-solid fa-graduation-cap text-amber-400 w-4 text-center"></i>
+            <span>Huấn Luyện</span>
+          </button>
+          
+          <button id="btnOpenCutterHeader" onclick="window.openCutterModal && window.openCutterModal(); window.closeToolsMenu && window.closeToolsMenu();" type="button" class="w-full text-left px-3 py-2.5 rounded-lg text-xs font-semibold text-indigo-300 hover:bg-indigo-500/15 flex items-center gap-2.5 transition cursor-pointer">
+            <i class="fa-solid fa-scissors text-indigo-400 w-4 text-center"></i>
+            <span>Cắt MP3</span>
+          </button>
+          
+          <div class="border-t border-slate-800 my-1"></div>
+          
+          <button id="btnServerConfigHeader" onclick="window.openServerSettings && window.openServerSettings(); window.closeToolsMenu && window.closeToolsMenu();" type="button" class="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-800 flex items-center justify-between transition cursor-pointer" title="Kiểm tra kết nối máy chủ AI">
+            <span class="flex items-center gap-2.5">
+              <i class="fa-solid fa-server text-slate-400 w-4 text-center"></i>
+              <span>Máy Chủ AI</span>
+            </span>
+            <span id="backendPulse" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          </button>
+        </div>
       </div>
+
     </div>
   </header>
 
@@ -131,22 +149,22 @@
         <div class="grid grid-cols-2 gap-2">
           <button type="button" id="btnVoiceMale" class="py-2 px-3 rounded-xl bg-indigo-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-indigo-500 shadow-md shadow-indigo-600/20 transition active:scale-95 cursor-pointer">
             <i class="fa-solid fa-user-tie text-xs"></i>
-            <span>👨 Giọng Nam</span>
+            <span>Giọng Nam</span>
           </button>
           <button type="button" id="btnVoiceFemale" class="py-2 px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-800 transition active:scale-95 cursor-pointer">
             <i class="fa-solid fa-user text-xs"></i>
-            <span>👩 Giọng Nữ</span>
+            <span>Giọng Nữ</span>
           </button>
         </div>
 
         <!-- Single Dropdown Menu for Styles -->
         <div id="maleStylesSection" class="space-y-1">
           <select id="mobileStyleSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm font-semibold text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition cursor-pointer">
-            <option value="loc_dinh_ky" selected>🎬 Lộc Đỉnh Ký</option>
-            <option value="neutral">🎙️ Mặc Định</option>
-            <option value="storytelling">📖 Kể Chuyện</option>
-            <option value="serious">🏛️ Nghiêm Túc</option>
-            <option value="lali5">✨ Lali 5</option>
+            <option value="loc_dinh_ky" selected>Lộc Đỉnh Ký</option>
+            <option value="neutral">Mặc Định</option>
+            <option value="storytelling">Kể Chuyện</option>
+            <option value="serious">Nghiêm Túc</option>
+            <option value="lali5">Lali 5</option>
           </select>
         </div>
 
@@ -377,7 +395,7 @@
           </div>
           <div class="flex items-center gap-1.5 text-[11px] font-mono text-slate-300">
             <span class="text-indigo-400 font-semibold" id="cutterStartBadge">00:00.000</span>
-            <span class="text-slate-600">➔</span>
+            <i class="fa-solid fa-arrow-right text-[10px] text-slate-600"></i>
             <span class="text-indigo-400 font-semibold" id="cutterEndBadge">00:10.000</span>
             <span class="px-1.5 py-0.5 rounded bg-indigo-600/30 text-indigo-200 text-[10px] ml-1 font-bold" id="cutterDurBadge">10.0s</span>
           </div>
@@ -472,11 +490,11 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <button id="btnExecuteSliceAndDenoise" type="button" class="w-full py-3 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-teal-600/20 transition flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span id="btnExecuteSliceDenoiseText">✨ Tách Nhiễu & Nạp Vào Style</span>
+            <span id="btnExecuteSliceDenoiseText">Tách Nhiễu & Nạp Vào Style</span>
           </button>
           <button id="btnExecuteSliceAndProfile" type="button" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer">
             <i class="fa-solid fa-scissors"></i>
-            <span id="btnExecuteSliceText">✂️ Cắt Giữ Nguyên & Nạp</span>
+            <span id="btnExecuteSliceText">Cắt Giữ Nguyên & Nạp</span>
           </button>
         </div>
 
@@ -527,9 +545,9 @@
             <i class="fa-solid fa-sliders text-teal-400"></i> Chế độ xử lý:
           </label>
           <select id="denoiserModeSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-semibold text-teal-300 focus:border-teal-500 cursor-pointer">
-            <option value="full" selected>🌟 Tách Toàn Diện (Khử nhạc + Khử nhiễu + Trong trẻo)</option>
-            <option value="vocal_isolate">🎵 Tách Giọng Khỏi Nhạc (Loại bỏ beat/nhạc nền)</option>
-            <option value="denoise_only">🔇 Khử Tạp Âm Môi Trường (Gió, ồn, rè, xì)</option>
+            <option value="full" selected>Tách Toàn Diện (Khử nhạc + Khử nhiễu + Trong trẻo)</option>
+            <option value="vocal_isolate">Tách Giọng Khỏi Nhạc (Loại bỏ beat/nhạc nền)</option>
+            <option value="denoise_only">Khử Tạp Âm Môi Trường (Gió, ồn, rè, xì)</option>
           </select>
         </div>
 
@@ -656,7 +674,7 @@
             <h3 class="font-bold text-slate-100 text-sm flex items-center gap-2">
               Phòng Thí Nghiệm Tự Học & AI Giám Khảo Chấm Điểm
               <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-normal border border-amber-500/30">10 Tiêu Chí Chuẩn 100đ</span>
-              <span id="atModelTrainedBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">🧠 Model Nơ-ron Sẵn Sàng</span>
+              <span id="atModelTrainedBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">Model Nơ-ron Sẵn Sàng</span>
             </h3>
             <p class="text-[11px] text-slate-400">Giám Khảo phân tích sâu 10 chỉ số âm học & Học Sinh tự động chỉnh sửa lặp qua các vòng</p>
           </div>
@@ -910,7 +928,7 @@
             <!-- Continue Tune Button (Chưa Đạt) -->
             <button id="btnContinueAutoTune" type="button" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 hover:border-amber-500 font-semibold text-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" disabled>
               <i class="fa-solid fa-rotate-right" id="atContinueIcon"></i>
-              <span id="atContinueText">🔄 Chưa Đạt - Tối Ưu Thêm 5 Vòng</span>
+              <span id="atContinueText">Chưa Đạt - Tối Ưu Thêm 5 Vòng</span>
             </button>
 
             <!-- Save Button -->
@@ -988,7 +1006,7 @@
     </div>
   </footer>
 
-  <script src="/app.js?v=20260826_vocal_denoiser_v7"></script>
+  <script src="/app.js?v=20260826_no_emoji_clean_v8"></script>
 </body>
 </html>
 

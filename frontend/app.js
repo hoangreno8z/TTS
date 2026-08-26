@@ -21,6 +21,40 @@ document.addEventListener("DOMContentLoaded", () => {
   const backendPulse = document.getElementById("backendPulse");
   const backendStatusText = document.getElementById("backendStatusText");
 
+  // =========================================================================
+  // Header Tools Dropdown Controller
+  // =========================================================================
+  const btnHeaderToolsMenu = document.getElementById("btnHeaderToolsMenu");
+  const headerToolsDropdown = document.getElementById("headerToolsDropdown");
+
+  function toggleToolsMenu() {
+    if (headerToolsDropdown) {
+      headerToolsDropdown.classList.toggle("hidden");
+    }
+  }
+
+  function closeToolsMenu() {
+    if (headerToolsDropdown) {
+      headerToolsDropdown.classList.add("hidden");
+    }
+  }
+
+  window.toggleToolsMenu = toggleToolsMenu;
+  window.closeToolsMenu = closeToolsMenu;
+
+  if (btnHeaderToolsMenu) {
+    btnHeaderToolsMenu.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleToolsMenu();
+    });
+  }
+
+  document.addEventListener("click", (e) => {
+    if (headerToolsDropdown && !headerToolsDropdown.contains(e.target) && e.target !== btnHeaderToolsMenu) {
+      closeToolsMenu();
+    }
+  });
+
   const audioPlayer = document.getElementById("audioPlayer");
   const resultBadge = document.getElementById("resultBadge");
   const resChars = document.getElementById("resChars");
@@ -138,12 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
       styles.forEach(st => {
         const opt = document.createElement("option");
         opt.value = st.style_id;
-        let icon = "🎙️";
-        if (st.style_id === "loc_dinh_ky") icon = "🎬";
-        else if (st.style_id === "serious") icon = "🏛️";
-        else if (st.style_id === "storytelling") icon = "📖";
-        else if (st.style_id.includes("lali")) icon = "✨";
-        opt.textContent = `${icon} ${st.name}`;
+        opt.textContent = st.name;
         if (st.style_id === activeStyle) opt.selected = true;
         mobileStyleSelect.appendChild(opt);
       });
@@ -325,7 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await res.json();
         closeRenameModal();
         await loadStyles();
-        alert(`🎉 ${data.message}`);
+        alert(` ${data.message}`);
       } catch (e) {
         alert(`Lỗi: ${e.message}`);
       } finally {
@@ -369,13 +398,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(4000) });
         if (res.ok) {
           const d = await res.json();
-          serverTestResult.textContent = `✅ Kết nối thành công (${d.selected_engine})`;
+          serverTestResult.textContent = ` Kết nối thành công (${d.selected_engine})`;
           serverTestResult.className = "text-[11px] text-emerald-400 font-semibold";
         } else {
           throw new Error("HTTP " + res.status);
         }
       } catch (e) {
-        serverTestResult.textContent = `❌ Không thể kết nối: ${e.message}`;
+        serverTestResult.textContent = ` Không thể kết nối: ${e.message}`;
         serverTestResult.className = "text-[11px] text-rose-400 font-semibold";
       }
     });
@@ -456,7 +485,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const data = await res.json();
-        alert(`🎉 ${data.message}\nĐã trích xuất ${data.profile.spectral_envelope_bins} dải tần Fourier và ${data.profile.faiss_timbre_vectors} vector âm sắc!`);
+        alert(` ${data.message}\nĐã trích xuất ${data.profile.spectral_envelope_bins} dải tần Fourier và ${data.profile.faiss_timbre_vectors} vector âm sắc!`);
       } else {
         const res = await fetch(`${API_BASE}/styles`, {
           method: "POST",
@@ -663,7 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
         anFormants.textContent = `F1: ${prof.formants.F1_hz}Hz | F2: ${prof.formants.F2_hz}Hz | F3: ${prof.formants.F3_hz}Hz | F4: ${prof.formants.F4_hz}Hz`;
       }
 
-      anRecommendation.textContent = `✅ Đã nạp thành công vào Style '${targetStyleName}'!`;
+      anRecommendation.textContent = ` Đã nạp thành công vào Style '${targetStyleName}'!`;
       anRecommendation.className = "text-emerald-400 font-medium pt-1 text-center";
 
       if (refAudioPlayer) {
@@ -672,7 +701,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       await loadStyles();
-      alert(`🎉 Bóc tách thành công ${files.length} file âm thanh mẫu nạp vào Style '${targetStyleName}'!\n- Tổng thời lượng: ${prof.total_duration_seconds}s\n- Vector Faiss: ${prof.faiss_timbre_vectors}`);
+      alert(` Bóc tách thành công ${files.length} file âm thanh mẫu nạp vào Style '${targetStyleName}'!\n- Tổng thời lượng: ${prof.total_duration_seconds}s\n- Vector Faiss: ${prof.faiss_timbre_vectors}`);
     } catch (err) {
       anFilename.textContent = "Lỗi bóc tách";
       anDuration.textContent = "Thất bại";
@@ -1144,13 +1173,13 @@ document.addEventListener("DOMContentLoaded", () => {
       await loadStyles();
       closeCutter();
 
-      alert(`🎉 ${data.message}\n- File cắt: ${data.sliced_file}\n- Formants: F1=${data.profile.formants.F1_hz}Hz, F2=${data.profile.formants.F2_hz}Hz\n- Vector Faiss: ${data.profile.faiss_timbre_vectors}`);
+      alert(` ${data.message}\n- File cắt: ${data.sliced_file}\n- Formants: F1=${data.profile.formants.F1_hz}Hz, F2=${data.profile.formants.F2_hz}Hz\n- Vector Faiss: ${data.profile.faiss_timbre_vectors}`);
 
     } catch (e) {
       alert(`Lỗi: ${e.message}`);
     } finally {
       btnExecuteSliceAndProfile.disabled = false;
-      if (btnExecuteSliceText) btnExecuteSliceText.textContent = "✂️ Cắt Giữ Nguyên & Nạp";
+      if (btnExecuteSliceText) btnExecuteSliceText.textContent = "Cắt Giữ Nguyên & Nạp";
     }
   });
 
@@ -1217,12 +1246,12 @@ document.addEventListener("DOMContentLoaded", () => {
         await loadStyles();
         closeCutter();
 
-        alert(`🎉 ${data.message}\n- File sạch: ${data.filename}\n- Độ trong của giọng: ${data.metrics.vocal_clarity_score}/100\n- Đã triệt tiêu: ${data.metrics.noise_reduction_pct}% tạp âm`);
+        alert(` ${data.message}\n- File sạch: ${data.filename}\n- Độ trong của giọng: ${data.metrics.vocal_clarity_score}/100\n- Đã triệt tiêu: ${data.metrics.noise_reduction_pct}% tạp âm`);
       } catch (e) {
         alert(`Lỗi: ${e.message}`);
       } finally {
         btnExecuteSliceAndDenoise.disabled = false;
-        if (btnExecuteSliceDenoiseText) btnExecuteSliceDenoiseText.textContent = "✨ Tách Nhiễu & Nạp Vào Style";
+        if (btnExecuteSliceDenoiseText) btnExecuteSliceDenoiseText.textContent = "Tách Nhiễu & Nạp Vào Style";
       }
     });
   }
@@ -1324,7 +1353,7 @@ document.addEventListener("DOMContentLoaded", () => {
           samples.forEach((s) => {
             const opt = document.createElement("option");
             opt.value = s.filename;
-            opt.textContent = `${s.source === "voice" ? "⭐ Chuẩn:" : "✂️ Đoạn cắt:"} ${s.filename}`;
+            opt.textContent = `${s.source === "voice" ? " Chuẩn:" : " Đoạn cắt:"} ${s.filename}`;
             atSampleSelect.appendChild(opt);
           });
         }
@@ -1348,7 +1377,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.has_trained_model) {
           atModelTrainedBadge.classList.remove("hidden");
           const totalSlices = data.meta?.total_slices_indexed || 0;
-          atModelTrainedBadge.textContent = `🧠 Model Nơ-ron Đã Lập Chỉ Mục (${totalSlices} mẫu)`;
+          atModelTrainedBadge.textContent = ` Model Nơ-ron Đã Lập Chỉ Mục (${totalSlices} mẫu)`;
         } else {
           atModelTrainedBadge.classList.add("hidden");
         }
@@ -1375,7 +1404,7 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(err.detail || "Lỗi huấn luyện");
         }
         const data = await res.json();
-        alert(`🎉 Huấn luyện thành công dấu vân tay AI Voice!\n- Đã phân tích: ${data.total_files} file mẫu gốc\n- Đã trích xuất và lập chỉ mục: ${data.total_slices} vector nơ-ron\n- Thời gian: ${data.training_time}s`);
+        alert(` Huấn luyện thành công dấu vân tay AI Voice!\n- Đã phân tích: ${data.total_files} file mẫu gốc\n- Đã trích xuất và lập chỉ mục: ${data.total_slices} vector nơ-ron\n- Thời gian: ${data.training_time}s`);
         await checkTrainingStatus(activeStyle);
       } catch (e) {
         alert(`Không thể huấn luyện: ${e.message}`);
@@ -1437,7 +1466,7 @@ document.addEventListener("DOMContentLoaded", () => {
       atVerdictBadge.className = "px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30";
     }
 
-    atRoundStatusText.textContent = preset.approved_by_user ? "✅ Cấu hình này đã được bạn duyệt & lưu vào hệ thống" : `Đã chấm qua ${preset.total_rounds || 1} vòng`;
+    atRoundStatusText.textContent = preset.approved_by_user ? " Cấu hình này đã được bạn duyệt & lưu vào hệ thống" : `Đã chấm qua ${preset.total_rounds || 1} vòng`;
 
     if (preset.final_breakdown) {
       renderBreakdown(preset.final_breakdown);
@@ -1655,7 +1684,7 @@ document.addEventListener("DOMContentLoaded", () => {
         atRoundStatusText.textContent = `Thất bại: ${e.message}`;
       } finally {
         btnContinueAutoTune.disabled = false;
-        if (atContinueText) atContinueText.textContent = "🔄 Chưa Đạt - Tối Ưu Thêm 5 Vòng";
+        if (atContinueText) atContinueText.textContent = "Chưa Đạt - Tối Ưu Thêm 5 Vòng";
         if (atContinueIcon) atContinueIcon.className = "fa-solid fa-rotate-right";
       }
     });
@@ -1689,9 +1718,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const data = await res.json();
-        alert(`🎉 ${data.message}\nCấu hình tối ưu này sẽ được áp dụng cho mọi văn bản bạn đọc sau này!`);
-        atRoundStatusText.textContent = "✅ Đã lưu thành công cấu hình tối ưu!";
-        btnSavePresetText.textContent = "✅ Đã Lưu Vào Style Này";
+        alert(` ${data.message}\nCấu hình tối ưu này sẽ được áp dụng cho mọi văn bản bạn đọc sau này!`);
+        atRoundStatusText.textContent = " Đã lưu thành công cấu hình tối ưu!";
+        btnSavePresetText.textContent = " Đã Lưu Vào Style Này";
       } catch (e) {
         alert(`Không thể lưu: ${e.message}`);
         btnSaveOptimalPreset.disabled = false;
@@ -1926,7 +1955,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await loadStyles();
         closeDenoiser();
 
-        alert(`🎉 Đã nạp thành công file giọng sạch vào Style '${targetStyle}'!\n- Vector nơ-ron: ${data.profile.faiss_timbre_vectors}`);
+        alert(` Đã nạp thành công file giọng sạch vào Style '${targetStyle}'!\n- Vector nơ-ron: ${data.profile.faiss_timbre_vectors}`);
       } catch (e) {
         alert(`Lỗi: ${e.message}`);
       } finally {
