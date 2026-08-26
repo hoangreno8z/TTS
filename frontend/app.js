@@ -1102,12 +1102,26 @@ document.addEventListener("DOMContentLoaded", () => {
       btnSyncSamplesToBackend.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-indigo-400"></i> Đang đồng bộ...';
 
       try {
+        const sid = activeStyle || "loc_dinh_ky";
+        const curStyleObj = loadedStylesList.find(s => s.style_id === sid);
+        const sname = curStyleObj ? curStyleObj.name : sid;
+
         const formData = new FormData();
-        formData.append("style_id", activeStyle);
+        formData.append("style_id", sid);
+        formData.append("style_name", sname);
+        
+        let validFileCount = 0;
         for (let i = 0; i < localSamples.length; i++) {
           const sample = localSamples[i];
+          if (!sample || !sample.blob) continue;
           const fileBlob = sample.blob instanceof Blob ? sample.blob : new Blob([sample.blob], { type: "audio/wav" });
-          formData.append("files", fileBlob, sample.filename || `sample_${i}.wav`);
+          formData.append("files", fileBlob, sample.filename || `sample_${i + 1}.wav`);
+          validFileCount++;
+        }
+
+        if (validFileCount === 0) {
+          alert("Không tìm thấy dữ liệu âm thanh hợp lệ trong bộ nhớ.");
+          return;
         }
 
         const res = await fetch(`${API_BASE}/styles/upload-samples`, {
@@ -1123,7 +1137,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (typeof errData.detail === "string") {
               errorDetail = errData.detail;
             } else if (Array.isArray(errData.detail)) {
-              errorDetail = errData.detail.map(d => d.msg || JSON.stringify(d)).join(", ");
+              errorDetail = errData.detail.map(d => (d.msg || JSON.stringify(d))).join(", ");
             } else if (errData.detail) {
               errorDetail = JSON.stringify(errData.detail);
             }
@@ -1132,8 +1146,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const data = await res.json();
-        const vectorCount = (data.profile && data.profile.faiss_timbre_vectors) ? data.profile.faiss_timbre_vectors : localSamples.length;
-        alert(`Đã đồng bộ thành công ${localSamples.length} mẫu lên Máy Chủ AI để huấn luyện âm vị!\n- Số mẫu: ${localSamples.length}\n- Vector phân tích: ${vectorCount}`);
+        const vectorCount = (data.profile && data.profile.faiss_timbre_vectors) ? data.profile.faiss_timbre_vectors : validFileCount;
+        alert(`Đã đồng bộ thành công ${validFileCount} mẫu lên Máy Chủ AI để huấn luyện âm vị!\n- Số mẫu: ${validFileCount}\n- Vector phân tích: ${vectorCount}`);
         await loadStyles();
         await loadAndRenderStyleSamples();
       } catch (e) {

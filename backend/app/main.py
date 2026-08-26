@@ -340,15 +340,24 @@ async def synthesize(req: TTSRequest):
 
 @app.post("/styles/upload-samples")
 async def upload_style_samples(
-    files: List[UploadFile] = File(...),
-    style_id: str = Form(...),
+    files: Optional[List[UploadFile]] = File(None),
+    style_id: Optional[str] = Form(None),
     style_name: Optional[str] = Form(None),
     description: Optional[str] = Form(None)
 ):
     """Upload multiple MP3/WAV files for an existing or new style, extract Fourier & Neural profile."""
     from .audio.voice_spectral_profiler import VoiceSpectralProfiler
     
-    clean_style_id = style_id.lower().strip().replace(" ", "_")
+    clean_style_id = (style_id or "loc_dinh_ky").lower().strip().replace(" ", "_")
+    if not clean_style_id:
+        clean_style_id = "loc_dinh_ky"
+
+    if not files:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vui lòng chọn ít nhất một file âm thanh mẫu (.mp3, .wav)."
+        )
+
     target_raw_dir = os.path.join(PROJECT_ROOT, "data", "raw", clean_style_id)
     os.makedirs(target_raw_dir, exist_ok=True)
 
