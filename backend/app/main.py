@@ -513,7 +513,12 @@ def stream_style_sample_audio_endpoint(style_id: str, filename: str):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File mẫu không tồn tại.")
         
     media_type = "audio/wav" if clean_fname.lower().endswith(".wav") else "audio/mpeg"
-    return FileResponse(target_path, media_type=media_type, filename=clean_fname)
+    return FileResponse(
+        target_path,
+        media_type=media_type,
+        filename=clean_fname,
+        headers={"Accept-Ranges": "bytes", "Access-Control-Allow-Origin": "*"}
+    )
 
 @app.delete("/styles/{style_id}/samples/{filename}")
 def delete_style_sample_endpoint(style_id: str, filename: str):

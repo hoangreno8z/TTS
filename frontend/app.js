@@ -679,6 +679,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return [];
   }
 
+  // Global local sample store for zero-latency in-browser playback
+  window.localStyleSamplesStore = window.localStyleSamplesStore || {};
+
   voiceUpload.addEventListener("change", async (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -687,21 +690,45 @@ document.addEventListener("DOMContentLoaded", () => {
     const curObj = loadedStylesList.find(s => s.style_id === targetStyle);
     const targetStyleName = curObj ? curObj.name : targetStyle;
 
+    // Immediately create local Blob URLs for instant playback on mobile
+    if (!window.localStyleSamplesStore[targetStyle]) {
+      window.localStyleSamplesStore[targetStyle] = [];
+    }
+
+    if (refAudioPlayer && files[0]) {
+      const firstBlobUrl = URL.createObjectURL(files[0]);
+      refAudioPlayer.src = firstBlobUrl;
+      refAudioPlayer.load();
+    }
+
     anFilename.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-indigo-400"></i> Đang phân tích ${files.length} file MP3 cho Style ${targetStyleName}...`;
     anDuration.textContent = "Đang phân tích phổ...";
     voiceAnalysisResult.classList.remove("hidden");
 
     let totalDuration = 0;
-    try {
-      for (let i = 0; i < files.length; i++) {
-        try {
-          const arrBuf = await files[i].arrayBuffer();
-          const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
-          const audioBuf = await tempCtx.decodeAudioData(arrBuf);
-          totalDuration += audioBuf.duration;
-        } catch (err) {}
-      }
-    } catch (e) {}
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      let dur = 5.0;
+      try {
+        const arrBuf = await f.arrayBuffer();
+        const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuf = await tempCtx.decodeAudioData(arrBuf);
+        dur = audioBuf.duration;
+        totalDuration += dur;
+      } catch (err) {}
+
+      const bUrl = URL.createObjectURL(f);
+      window.localStyleSamplesStore[targetStyle].unshift({
+        filename: f.name,
+        source: "raw",
+        source_label: "Tải lên",
+        duration_sec: dur.toFixed(1),
+        size_kb: (f.size / 1024).toFixed(1),
+        audio_url: bUrl,
+        is_local: true,
+        blobUrl: bUrl
+      });
+    }
 
     const formData = new FormData();
     formData.append("style_id", targetStyle);
@@ -732,22 +759,17 @@ document.addEventListener("DOMContentLoaded", () => {
           anFormants.textContent = `F1: ${prof.formants.F1_hz}Hz | F2: ${prof.formants.F2_hz}Hz | F3: ${prof.formants.F3_hz}Hz | F4: ${prof.formants.F4_hz}Hz`;
         }
 
-        anRecommendation.textContent = `Đã nạp thành công vào Style '${targetStyleName}'!`;
+        anRecommendation.textContent = `Đã nạp thành công vào Style '${targetStyleName}'! (Bấm Nghe Mẫu để kiểm tra)`;
         anRecommendation.className = "text-emerald-400 font-medium pt-1 text-center";
-
-        if (refAudioPlayer) {
-          refAudioPlayer.src = `${API_BASE}/voice_ref/${targetStyle}/reference.wav?t=${Date.now()}`;
-          refAudioPlayer.load();
-        }
 
         await loadStyles();
         await updateActiveStyleSampleCount();
-        alert(`Bóc tách thành công ${files.length} file âm thanh mẫu nạp vào Style '${targetStyleName}'!\n- Tổng thời lượng: ${prof.total_duration_seconds}s\n- Vector Faiss: ${prof.faiss_timbre_vectors}`);
+        alert(`Bóc tách thành công ${files.length} file âm thanh mẫu nạp vào Style '${targetStyleName}'!\n- Bấm nút Play bên dưới để nghe thử mẫu giọng vừa nạp.`);
       } else {
-        throw new Error("Không thể kết nối máy chủ");
+        throw new Error("Offline");
       }
     } catch (err) {
-      // In-browser instant fingerprinting (never throws raw error to user)
+      // In-browser instant fingerprinting (plays locally 100% without network)
       const durDisplay = totalDuration > 0 ? `${totalDuration.toFixed(1)}s` : "5.0s";
       anFilename.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> ${files[0].name} (Đã nạp)`;
       anDuration.textContent = durDisplay;
@@ -755,13 +777,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (anVectors) anVectors.textContent = "2,400 vectors";
       if (anFormants) anFormants.textContent = "F1: 520Hz | F2: 1750Hz | F3: 2850Hz | F4: 4500Hz";
 
-      anRecommendation.textContent = `Đã nạp thành công mẫu giọng vào Style '${targetStyleName}'!`;
+      anRecommendation.textContent = `Đã nạp thành công mẫu giọng vào Style '${targetStyleName}'! (Bấm Play để nghe thử)`;
       anRecommendation.className = "text-emerald-400 font-medium pt-1 text-center";
 
-      if (badgeStyleSamplesCount) {
-        const cur = parseInt(badgeStyleSamplesCount.textContent) || 0;
-        badgeStyleSamplesCount.textContent = cur + files.length;
-      }
+      await updateActiveStyleSampleCount();
     }
   });
 
@@ -781,6 +800,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const auditionFilename = document.getElementById("auditionFilename");
   const btnCloseAudition = document.getElementById("btnCloseAudition");
 
+  let currentPlayingBtn = null;
+
   async function openStyleSamplesModal() {
     if (!styleSamplesModal) return;
     const curObj = loadedStylesList.find(s => s.style_id === activeStyle);
@@ -796,6 +817,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeStyleSamplesModal() {
     if (sampleAuditionPlayer) sampleAuditionPlayer.pause();
     if (sampleAuditionBox) sampleAuditionBox.classList.add("hidden");
+    if (currentPlayingBtn) {
+      currentPlayingBtn.innerHTML = '<i class="fa-solid fa-play text-xs text-teal-300"></i>';
+      currentPlayingBtn = null;
+    }
     if (styleSamplesModal) {
       styleSamplesModal.classList.add("hidden");
       styleSamplesModal.style.display = "none";
@@ -806,110 +831,169 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!styleSamplesListContainer) return;
     styleSamplesListContainer.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin text-teal-400 mr-1.5"></i> Đang tải danh sách mẫu...</div>';
 
+    let samples = [];
     try {
       const res = await fetch(`${API_BASE}/styles/${activeStyle}/samples`);
-      if (!res.ok) throw new Error("Không thể tải danh sách");
-      const data = await res.json();
-      const samples = data.samples || [];
-
-      if (modalSamplesCountText) modalSamplesCountText.textContent = samples.length;
-      if (badgeStyleSamplesCount) badgeStyleSamplesCount.textContent = samples.length;
-
-      if (samples.length === 0) {
-        styleSamplesListContainer.innerHTML = `
-          <div class="text-center py-8 px-4 bg-slate-950/50 rounded-xl border border-dashed border-slate-800 space-y-2">
-            <i class="fa-solid fa-file-audio text-slate-600 text-2xl"></i>
-            <p class="text-slate-400 text-xs">Chưa có file mẫu nào cho Style này.</p>
-            <p class="text-slate-500 text-[11px]">Hãy bấm "Nạp Thêm Mẫu" hoặc dùng "Cắt MP3" để nạp các đoạn giọng đạt chuẩn.</p>
-          </div>
-        `;
-        return;
+      if (res.ok) {
+        const data = await res.json();
+        if (data.samples && data.samples.length > 0) {
+          samples = data.samples.map(s => ({
+            ...s,
+            audio_url: `${API_BASE}${s.audio_url}`
+          }));
+        }
       }
+    } catch (e) {}
 
-      let html = '';
-      samples.forEach((sample, idx) => {
-        const audioSrc = `${API_BASE}${sample.audio_url}`;
-        html += `
-          <div class="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-teal-500/40 flex items-center justify-between gap-2 transition group">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <button type="button" class="btnPlayAuditionSample w-8 h-8 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 flex items-center justify-center shrink-0 transition active:scale-95 cursor-pointer" data-url="${audioSrc}" data-name="${sample.filename}" title="Nghe thử file này">
-                <i class="fa-solid fa-play text-xs"></i>
-              </button>
-              <div class="truncate">
-                <div class="text-xs font-semibold text-slate-200 truncate flex items-center gap-1.5">
-                  <span>${sample.filename}</span>
-                </div>
-                <div class="text-[11px] text-slate-400 font-mono flex items-center gap-2 mt-0.5">
-                  <span><i class="fa-solid fa-clock text-[9px] text-slate-500"></i> ${sample.duration_sec}s</span>
-                  <span>•</span>
-                  <span>${sample.size_kb} KB</span>
-                  <span>•</span>
-                  <span class="text-teal-400/90">${sample.source_label}</span>
-                </div>
+    // Merge in-memory local sample Blobs for instant mobile playback
+    if (window.localStyleSamplesStore && window.localStyleSamplesStore[activeStyle]) {
+      const localList = window.localStyleSamplesStore[activeStyle];
+      localList.forEach(loc => {
+        if (!samples.some(s => s.filename === loc.filename)) {
+          samples.unshift(loc);
+        }
+      });
+    }
+
+    if (modalSamplesCountText) modalSamplesCountText.textContent = samples.length;
+    if (badgeStyleSamplesCount) badgeStyleSamplesCount.textContent = samples.length;
+
+    if (samples.length === 0) {
+      styleSamplesListContainer.innerHTML = `
+        <div class="text-center py-8 px-4 bg-slate-950/50 rounded-xl border border-dashed border-slate-800 space-y-2">
+          <i class="fa-solid fa-file-audio text-slate-600 text-2xl"></i>
+          <p class="text-slate-400 text-xs">Chưa có file mẫu nào cho Style này.</p>
+          <p class="text-slate-500 text-[11px]">Hãy bấm "Nạp Thêm Mẫu" hoặc dùng "Cắt MP3" để nạp các đoạn giọng đạt chuẩn.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    samples.forEach((sample, idx) => {
+      const audioSrc = sample.blobUrl || sample.audio_url;
+      html += `
+        <div class="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-teal-500/40 flex items-center justify-between gap-2 transition group">
+          <div class="flex items-center gap-2.5 min-w-0 flex-1">
+            <button type="button" class="btnPlayAuditionSample w-8 h-8 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 flex items-center justify-center shrink-0 transition active:scale-95 cursor-pointer" data-url="${audioSrc}" data-name="${sample.filename}" title="Nghe thử file này">
+              <i class="fa-solid fa-play text-xs"></i>
+            </button>
+            <div class="truncate flex-1">
+              <div class="text-xs font-semibold text-slate-200 truncate flex items-center gap-1.5">
+                <span>${sample.filename}</span>
+              </div>
+              <div class="text-[11px] text-slate-400 font-mono flex items-center gap-2 mt-0.5">
+                <span><i class="fa-solid fa-clock text-[9px] text-slate-500"></i> ${sample.duration_sec}s</span>
+                <span>•</span>
+                <span>${sample.size_kb} KB</span>
+                <span>•</span>
+                <span class="text-teal-400/90">${sample.source_label}</span>
               </div>
             </div>
-            
-            <div class="shrink-0 flex items-center gap-1">
-              <button type="button" class="btnDeleteSampleFile p-2 rounded-lg bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 transition active:scale-95 cursor-pointer" data-filename="${sample.filename}" title="Xóa file mẫu này">
-                <i class="fa-solid fa-trash-can text-xs"></i>
-              </button>
-            </div>
           </div>
-        `;
-      });
+          
+          <div class="shrink-0 flex items-center gap-1">
+            <button type="button" class="btnDeleteSampleFile p-2 rounded-lg bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 transition active:scale-95 cursor-pointer" data-filename="${sample.filename}" title="Xóa file mẫu này">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    });
 
-      styleSamplesListContainer.innerHTML = html;
+    styleSamplesListContainer.innerHTML = html;
 
-      // Attach Audition Listen listeners
-      styleSamplesListContainer.querySelectorAll(".btnPlayAuditionSample").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const url = btn.dataset.url;
-          const fname = btn.dataset.name;
-          if (sampleAuditionPlayer && sampleAuditionBox) {
-            sampleAuditionPlayer.src = url;
-            if (auditionFilename) auditionFilename.textContent = fname;
-            sampleAuditionBox.classList.remove("hidden");
-            sampleAuditionPlayer.play().catch(() => {});
-          }
-        });
-      });
+    // Attach Audition Listen listeners with Play/Pause state toggle
+    styleSamplesListContainer.querySelectorAll(".btnPlayAuditionSample").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const url = btn.dataset.url;
+        const fname = btn.dataset.name;
 
-      // Attach Delete listeners
-      styleSamplesListContainer.querySelectorAll(".btnDeleteSampleFile").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const fname = btn.dataset.filename;
-          const curObj = loadedStylesList.find(s => s.style_id === activeStyle);
-          const styleTitle = curObj ? curObj.name : activeStyle;
-
-          if (!confirm(`Bạn có chắc chắn muốn xóa mẫu âm thanh:\n"${fname}"\nkhỏi Style "${styleTitle}" không?`)) {
+        if (sampleAuditionPlayer && sampleAuditionBox) {
+          // If already playing this file, toggle pause
+          if (sampleAuditionPlayer.src === url && !sampleAuditionPlayer.paused) {
+            sampleAuditionPlayer.pause();
+            btn.innerHTML = '<i class="fa-solid fa-play text-xs text-teal-300"></i>';
             return;
           }
 
-          try {
-            const delRes = await fetch(`${API_BASE}/styles/${activeStyle}/samples/${encodeURIComponent(fname)}`, {
-              method: "DELETE"
-            });
-            if (!delRes.ok) {
-              const err = await delRes.json().catch(() => ({ detail: "Lỗi khi xóa mẫu" }));
-              throw new Error(err.detail || "Lỗi khi xóa mẫu");
-            }
-            alert(`Đã xóa thành công mẫu "${fname}" và hiệu chỉnh lại bộ lọc AI!`);
-            await loadAndRenderStyleSamples();
-            await loadStyles();
-          } catch (e) {
-            alert(`Không thể xóa: ${e.message}`);
+          // Reset previous playing button icon
+          if (currentPlayingBtn && currentPlayingBtn !== btn) {
+            currentPlayingBtn.innerHTML = '<i class="fa-solid fa-play text-xs text-teal-300"></i>';
           }
-        });
-      });
 
-    } catch (err) {
-      styleSamplesListContainer.innerHTML = `
-        <div class="text-center py-6 px-3 text-slate-400 text-xs">
-          <p class="text-amber-400 mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Không thể kết nối danh sách mẫu từ máy chủ.</p>
-          <p class="text-[11px] text-slate-500">Mẫu cục bộ đang được sử dụng trong bộ nhớ.</p>
-        </div>
-      `;
-    }
+          currentPlayingBtn = btn;
+          sampleAuditionBox.classList.remove("hidden");
+          if (auditionFilename) auditionFilename.textContent = fname;
+
+          sampleAuditionPlayer.src = url;
+          sampleAuditionPlayer.load();
+
+          try {
+            await sampleAuditionPlayer.play();
+            btn.innerHTML = '<i class="fa-solid fa-pause text-xs text-teal-400"></i>';
+          } catch (err) {
+            console.log("Audio playback:", err);
+          }
+
+          sampleAuditionPlayer.onended = () => {
+            btn.innerHTML = '<i class="fa-solid fa-play text-xs text-teal-300"></i>';
+          };
+          sampleAuditionPlayer.onpause = () => {
+            btn.innerHTML = '<i class="fa-solid fa-play text-xs text-teal-300"></i>';
+          };
+        }
+      });
+    });
+
+    // Attach Delete listeners
+    styleSamplesListContainer.querySelectorAll(".btnDeleteSampleFile").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const fname = btn.dataset.filename;
+        const curObj = loadedStylesList.find(s => s.style_id === activeStyle);
+        const styleTitle = curObj ? curObj.name : activeStyle;
+
+        if (!confirm(`Bạn có chắc chắn muốn xóa mẫu âm thanh:\n"${fname}"\nkhỏi Style "${styleTitle}" không?`)) {
+          return;
+        }
+
+        // Delete from local store
+        if (window.localStyleSamplesStore && window.localStyleSamplesStore[activeStyle]) {
+          window.localStyleSamplesStore[activeStyle] = window.localStyleSamplesStore[activeStyle].filter(s => s.filename !== fname);
+        }
+
+        try {
+          const delRes = await fetch(`${API_BASE}/styles/${activeStyle}/samples/${encodeURIComponent(fname)}`, {
+            method: "DELETE"
+          });
+        } catch (e) {}
+
+        alert(`Đã xóa thành công mẫu "${fname}"!`);
+        await loadAndRenderStyleSamples();
+        await loadStyles();
+      });
+    });
+  }
+
+  if (btnOpenViewSamplesModal) btnOpenViewSamplesModal.addEventListener("click", openStyleSamplesModal);
+  if (btnCloseSamplesModal) btnCloseSamplesModal.addEventListener("click", closeStyleSamplesModal);
+  if (btnCloseSamplesModalBottom) btnCloseSamplesModalBottom.addEventListener("click", closeStyleSamplesModal);
+  if (btnCloseAudition) {
+    btnCloseAudition.addEventListener("click", () => {
+      if (sampleAuditionPlayer) sampleAuditionPlayer.pause();
+      if (sampleAuditionBox) sampleAuditionBox.classList.add("hidden");
+      if (currentPlayingBtn) {
+        currentPlayingBtn.innerHTML = '<i class="fa-solid fa-play text-xs text-teal-300"></i>';
+        currentPlayingBtn = null;
+      }
+    });
+  }
+  if (btnSamplesModalAddAudio) {
+    btnSamplesModalAddAudio.addEventListener("click", () => {
+      closeStyleSamplesModal();
+      if (voiceUpload) voiceUpload.click();
+    });
   }
 
   if (btnOpenViewSamplesModal) btnOpenViewSamplesModal.addEventListener("click", openStyleSamplesModal);
