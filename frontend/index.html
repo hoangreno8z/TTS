@@ -1032,8 +1032,11 @@
       </div>
 
       <!-- Modal Footer -->
-      <div class="border-t border-slate-800 pt-3 flex items-center justify-between">
-        <span class="text-[11px] text-slate-400 italic">Bấm nút xóa để loại bỏ mẫu kém chất lượng</span>
+      <div class="border-t border-slate-800 pt-3 flex items-center justify-between gap-2 flex-wrap">
+        <button id="btnSyncSamplesToBackend" type="button" class="px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 font-semibold text-xs border border-indigo-500/40 flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-cloud-arrow-up text-indigo-400"></i>
+          <span>Đồng Bộ Sang Server</span>
+        </button>
         <button id="btnCloseSamplesModalBottom" type="button" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition cursor-pointer">
           Đóng
         </button>
@@ -1104,7 +1107,7 @@
     </div>
   </footer>
 
-  <script src="/app.js?v=20260826_instant_playback_v13"></script>
+  <script src="/app.js?v=20260826_indexeddb_storage_v14"></script>
 </body>
 </html>
 

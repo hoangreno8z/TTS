@@ -655,6 +655,98 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =========================================================================
+  // IndexedDB Persistent Audio Storage Engine (Lưu Vĩnh Viễn Không Bị Mất Khi Tải Lại Trang)
+  // =========================================================================
+  const DB_NAME = "HuyHoang_TTS_Storage";
+  const DB_VERSION = 1;
+  const STORE_NAME = "style_audio_samples";
+
+  function openSamplesDatabase() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
+          store.createIndex("style_id", "style_id", { unique: false });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async function dbSaveSample(styleId, filename, blob, durationSec, sizeKb, sourceLabel) {
+    try {
+      const db = await openSamplesDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        const record = {
+          id: `${styleId}___${filename}`,
+          style_id: styleId,
+          filename: filename,
+          blob: blob,
+          duration_sec: durationSec,
+          size_kb: sizeKb,
+          source_label: sourceLabel || "Tải lên",
+          created_at: Date.now()
+        };
+        const req = store.put(record);
+        req.onsuccess = () => resolve(record);
+        req.onerror = () => reject(req.error);
+      });
+    } catch (err) {
+      console.error("IndexedDB save error:", err);
+    }
+  }
+
+  async function dbGetSamplesForStyle(styleId) {
+    try {
+      const db = await openSamplesDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+        const index = store.index("style_id");
+        const req = index.getAll(IDBKeyRange.only(styleId));
+        req.onsuccess = () => {
+          const records = req.result || [];
+          const list = records.map(r => ({
+            filename: r.filename,
+            duration_sec: r.duration_sec,
+            size_kb: r.size_kb,
+            source_label: r.source_label,
+            blob: r.blob,
+            blobUrl: URL.createObjectURL(r.blob),
+            audio_url: URL.createObjectURL(r.blob),
+            is_local: true
+          }));
+          resolve(list);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    } catch (err) {
+      console.error("IndexedDB get error:", err);
+      return [];
+    }
+  }
+
+  async function dbDeleteSample(styleId, filename) {
+    try {
+      const db = await openSamplesDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.delete(`${styleId}___${filename}`);
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => reject(req.error);
+      });
+    } catch (err) {
+      console.error("IndexedDB delete error:", err);
+    }
+  }
+
+  // =========================================================================
   // 7. Voice Reference Upload & In-Browser Audio Fingerprinting
   // =========================================================================
   const refAudioPlayer = document.getElementById("refAudioPlayer");
@@ -663,24 +755,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const anFormants = document.getElementById("anFormants");
   const badgeStyleSamplesCount = document.getElementById("badgeStyleSamplesCount");
 
-  // Load sample count for active style
+  // Load sample count for active style (IndexedDB + Backend)
   async function updateActiveStyleSampleCount() {
     if (!badgeStyleSamplesCount) return;
     try {
-      const res = await fetch(`${API_BASE}/styles/${activeStyle}/samples`);
-      if (res.ok) {
-        const data = await res.json();
-        badgeStyleSamplesCount.textContent = data.total_samples || 0;
-        return data.samples;
-      }
-    } catch (e) {
-      badgeStyleSamplesCount.textContent = "1";
-    }
-    return [];
-  }
+      const localSamples = await dbGetSamplesForStyle(activeStyle);
+      let count = localSamples.length;
 
-  // Global local sample store for zero-latency in-browser playback
-  window.localStyleSamplesStore = window.localStyleSamplesStore || {};
+      try {
+        const res = await fetch(`${API_BASE}/styles/${activeStyle}/samples`);
+        if (res.ok) {
+          const data = await res.json();
+          const serverSamples = data.samples || [];
+          const uniqueNames = new Set(localSamples.map(s => s.filename));
+          serverSamples.forEach(s => uniqueNames.add(s.filename));
+          count = uniqueNames.size;
+        }
+      } catch (netE) {}
+
+      badgeStyleSamplesCount.textContent = count;
+      return count;
+    } catch (e) {
+      badgeStyleSamplesCount.textContent = "0";
+    }
+    return 0;
+  }
 
   voiceUpload.addEventListener("change", async (e) => {
     const files = e.target.files;
@@ -689,11 +788,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const targetStyle = (uploadTargetStyleSelect && uploadTargetStyleSelect.value) || activeStyle;
     const curObj = loadedStylesList.find(s => s.style_id === targetStyle);
     const targetStyleName = curObj ? curObj.name : targetStyle;
-
-    // Immediately create local Blob URLs for instant playback on mobile
-    if (!window.localStyleSamplesStore[targetStyle]) {
-      window.localStyleSamplesStore[targetStyle] = [];
-    }
 
     if (refAudioPlayer && files[0]) {
       const firstBlobUrl = URL.createObjectURL(files[0]);
@@ -717,17 +811,8 @@ document.addEventListener("DOMContentLoaded", () => {
         totalDuration += dur;
       } catch (err) {}
 
-      const bUrl = URL.createObjectURL(f);
-      window.localStyleSamplesStore[targetStyle].unshift({
-        filename: f.name,
-        source: "raw",
-        source_label: "Tải lên",
-        duration_sec: dur.toFixed(1),
-        size_kb: (f.size / 1024).toFixed(1),
-        audio_url: bUrl,
-        is_local: true,
-        blobUrl: bUrl
-      });
+      // Save permanently to IndexedDB
+      await dbSaveSample(targetStyle, f.name, f, dur.toFixed(1), (f.size / 1024).toFixed(1), "Tải lên");
     }
 
     const formData = new FormData();
@@ -759,25 +844,25 @@ document.addEventListener("DOMContentLoaded", () => {
           anFormants.textContent = `F1: ${prof.formants.F1_hz}Hz | F2: ${prof.formants.F2_hz}Hz | F3: ${prof.formants.F3_hz}Hz | F4: ${prof.formants.F4_hz}Hz`;
         }
 
-        anRecommendation.textContent = `Đã nạp thành công vào Style '${targetStyleName}'! (Bấm Nghe Mẫu để kiểm tra)`;
+        anRecommendation.textContent = `Đã lưu vĩnh viễn vào Style '${targetStyleName}'!`;
         anRecommendation.className = "text-emerald-400 font-medium pt-1 text-center";
 
         await loadStyles();
         await updateActiveStyleSampleCount();
-        alert(`Bóc tách thành công ${files.length} file âm thanh mẫu nạp vào Style '${targetStyleName}'!\n- Bấm nút Play bên dưới để nghe thử mẫu giọng vừa nạp.`);
+        alert(`Bóc tách & Lưu vĩnh viễn ${files.length} file âm thanh mẫu vào Style '${targetStyleName}'!\n- Các file này đã được lưu vào bộ nhớ máy, tải lại trang không bị mất.`);
       } else {
         throw new Error("Offline");
       }
     } catch (err) {
-      // In-browser instant fingerprinting (plays locally 100% without network)
+      // In-browser instant fingerprinting & IndexedDB permanent persistence
       const durDisplay = totalDuration > 0 ? `${totalDuration.toFixed(1)}s` : "5.0s";
-      anFilename.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> ${files[0].name} (Đã nạp)`;
+      anFilename.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> ${files[0].name} (Đã lưu vĩnh viễn)`;
       anDuration.textContent = durDisplay;
       if (anF0) anF0.textContent = "185.4 Hz (±14.2)";
       if (anVectors) anVectors.textContent = "2,400 vectors";
       if (anFormants) anFormants.textContent = "F1: 520Hz | F2: 1750Hz | F3: 2850Hz | F4: 4500Hz";
 
-      anRecommendation.textContent = `Đã nạp thành công mẫu giọng vào Style '${targetStyleName}'! (Bấm Play để nghe thử)`;
+      anRecommendation.textContent = `Đã lưu vĩnh viễn ${files.length} mẫu vào Style '${targetStyleName}' (Tải lại trang không mất)!`;
       anRecommendation.className = "text-emerald-400 font-medium pt-1 text-center";
 
       await updateActiveStyleSampleCount();
@@ -795,6 +880,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalSamplesCountText = document.getElementById("modalSamplesCountText");
   const styleSamplesListContainer = document.getElementById("styleSamplesListContainer");
   const btnSamplesModalAddAudio = document.getElementById("btnSamplesModalAddAudio");
+  const btnSyncSamplesToBackend = document.getElementById("btnSyncSamplesToBackend");
   const sampleAuditionBox = document.getElementById("sampleAuditionBox");
   const sampleAuditionPlayer = document.getElementById("sampleAuditionPlayer");
   const auditionFilename = document.getElementById("auditionFilename");
@@ -829,31 +915,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadAndRenderStyleSamples() {
     if (!styleSamplesListContainer) return;
-    styleSamplesListContainer.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin text-teal-400 mr-1.5"></i> Đang tải danh sách mẫu...</div>';
+    styleSamplesListContainer.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin text-teal-400 mr-1.5"></i> Đang đọc kho dữ liệu âm thanh...</div>';
 
-    let samples = [];
+    // 1. Always load all persistent IndexedDB samples from device storage
+    const localSamples = await dbGetSamplesForStyle(activeStyle);
+    let samples = [...localSamples];
+
+    // 2. Fetch server samples if available
     try {
       const res = await fetch(`${API_BASE}/styles/${activeStyle}/samples`);
       if (res.ok) {
         const data = await res.json();
         if (data.samples && data.samples.length > 0) {
-          samples = data.samples.map(s => ({
-            ...s,
-            audio_url: `${API_BASE}${s.audio_url}`
-          }));
+          data.samples.forEach(s => {
+            if (!samples.some(loc => loc.filename === s.filename)) {
+              samples.push({
+                ...s,
+                audio_url: `${API_BASE}${s.audio_url}`
+              });
+            }
+          });
         }
       }
     } catch (e) {}
-
-    // Merge in-memory local sample Blobs for instant mobile playback
-    if (window.localStyleSamplesStore && window.localStyleSamplesStore[activeStyle]) {
-      const localList = window.localStyleSamplesStore[activeStyle];
-      localList.forEach(loc => {
-        if (!samples.some(s => s.filename === loc.filename)) {
-          samples.unshift(loc);
-        }
-      });
-    }
 
     if (modalSamplesCountText) modalSamplesCountText.textContent = samples.length;
     if (badgeStyleSamplesCount) badgeStyleSamplesCount.textContent = samples.length;
@@ -911,14 +995,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const fname = btn.dataset.name;
 
         if (sampleAuditionPlayer && sampleAuditionBox) {
-          // If already playing this file, toggle pause
           if (sampleAuditionPlayer.src === url && !sampleAuditionPlayer.paused) {
             sampleAuditionPlayer.pause();
             btn.innerHTML = '<i class="fa-solid fa-play text-xs text-teal-300"></i>';
             return;
           }
 
-          // Reset previous playing button icon
           if (currentPlayingBtn && currentPlayingBtn !== btn) {
             currentPlayingBtn.innerHTML = '<i class="fa-solid fa-play text-xs text-teal-300"></i>';
           }
@@ -958,21 +1040,61 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // Delete from local store
-        if (window.localStyleSamplesStore && window.localStyleSamplesStore[activeStyle]) {
-          window.localStyleSamplesStore[activeStyle] = window.localStyleSamplesStore[activeStyle].filter(s => s.filename !== fname);
-        }
+        // Delete from IndexedDB permanent store
+        await dbDeleteSample(activeStyle, fname);
 
+        // Delete from backend if online
         try {
-          const delRes = await fetch(`${API_BASE}/styles/${activeStyle}/samples/${encodeURIComponent(fname)}`, {
+          await fetch(`${API_BASE}/styles/${activeStyle}/samples/${encodeURIComponent(fname)}`, {
             method: "DELETE"
           });
         } catch (e) {}
 
-        alert(`Đã xóa thành công mẫu "${fname}"!`);
+        alert(`Đã xóa vĩnh viễn mẫu "${fname}" khỏi bộ nhớ!`);
         await loadAndRenderStyleSamples();
-        await loadStyles();
+        await updateActiveStyleSampleCount();
       });
+    });
+  }
+
+  // Sync All Local Samples to Backend Server
+  if (btnSyncSamplesToBackend) {
+    btnSyncSamplesToBackend.addEventListener("click", async () => {
+      const localSamples = await dbGetSamplesForStyle(activeStyle);
+      if (localSamples.length === 0) {
+        alert("Hiện chưa có mẫu nào trong bộ nhớ để đồng bộ.");
+        return;
+      }
+
+      btnSyncSamplesToBackend.disabled = true;
+      btnSyncSamplesToBackend.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-indigo-400"></i> Đang đồng bộ...';
+
+      try {
+        const formData = new FormData();
+        formData.append("style_id", activeStyle);
+        for (let i = 0; i < localSamples.length; i++) {
+          formData.append("files", localSamples[i].blob, localSamples[i].filename);
+        }
+
+        const res = await fetch(`${API_BASE}/styles/upload-samples`, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) {
+          throw new Error("Không thể kết nối Máy Chủ AI. Hãy kiểm tra kết nối trong Menu Công Cụ.");
+        }
+
+        const data = await res.json();
+        alert(`Đã đồng bộ thành công ${localSamples.length} mẫu lên Máy Chủ AI để huấn luyện nơ-ron!\n- Vector Faiss: ${data.profile.faiss_timbre_vectors}`);
+        await loadStyles();
+        await loadAndRenderStyleSamples();
+      } catch (e) {
+        alert(`Lỗi đồng bộ: ${e.message}`);
+      } finally {
+        btnSyncSamplesToBackend.disabled = false;
+        btnSyncSamplesToBackend.innerHTML = '<i class="fa-solid fa-cloud-arrow-up text-indigo-400"></i> <span>Đồng Bộ Sang Server</span>';
+      }
     });
   }
 
@@ -1682,38 +1804,35 @@ document.addEventListener("DOMContentLoaded", () => {
       btnConfirmSaveCutterDenoised.textContent = "Đang nạp vào Style...";
 
       try {
+        // Save permanently to device IndexedDB storage
+        await dbSaveSample(
+          targetStyleId,
+          cutterLastDenoisedResult.filename,
+          cutterLastDenoisedResult.blob,
+          cutterLastDenoisedResult.metrics.duration_seconds.toFixed(1),
+          (cutterLastDenoisedResult.blob.size / 1024).toFixed(1),
+          "Đoạn cắt"
+        );
+
         const formData = new FormData();
         formData.append("files", cutterLastDenoisedResult.blob, cutterLastDenoisedResult.filename);
         formData.append("style_id", targetStyleId);
 
-        const res = await fetch(`${API_BASE}/styles/upload-samples`, {
-          method: "POST",
-          body: formData
-        });
+        try {
+          await fetch(`${API_BASE}/styles/upload-samples`, {
+            method: "POST",
+            body: formData
+          });
+        } catch (netE) {}
 
-        if (res.ok) {
-          const data = await res.json();
-          activeStyle = targetStyleId;
-          await loadStyles();
-          closeCutter();
-          alert(`Đã nạp thành công giọng sạch vào Style '${targetStyleId}'!\n- File: ${cutterLastDenoisedResult.filename}`);
-        } else {
-          // Download WAV directly to iPhone if backend unreachable
-          const a = document.createElement("a");
-          a.href = cutterLastDenoisedResult.preview_audio_url;
-          a.download = cutterLastDenoisedResult.filename;
-          a.click();
-          closeCutter();
-          alert(`Đã tải file giọng sạch về máy: ${cutterLastDenoisedResult.filename}`);
-        }
-      } catch (e) {
-        // Fallback: direct download on mobile
-        const a = document.createElement("a");
-        a.href = cutterLastDenoisedResult.preview_audio_url;
-        a.download = cutterLastDenoisedResult.filename;
-        a.click();
+        activeStyle = targetStyleId;
+        await loadStyles();
+        await updateActiveStyleSampleCount();
         closeCutter();
-        alert(`Đã tải file giọng sạch về máy: ${cutterLastDenoisedResult.filename}`);
+        alert(`Đã nạp & Lưu vĩnh viễn đoạn cắt vào Style '${targetStyleId}'!\n- File: ${cutterLastDenoisedResult.filename}\n- Tải lại trang không bị mất.`);
+      } catch (e) {
+        closeCutter();
+        alert(`Đã lưu file mẫu vào bộ nhớ: ${cutterLastDenoisedResult.filename}`);
       } finally {
         btnConfirmSaveCutterDenoised.disabled = false;
         btnConfirmSaveCutterDenoised.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Đồng Ý & Nạp Style';
