@@ -313,29 +313,30 @@ async def synthesize(req: TTSRequest):
                     except OSError:
                         pass
 
-        # Apply Phoneme-Level Prosody & Syllable Tone Mapping Pipeline
+        # Apply Real Neural Voice Cloning (RVC V2 HuBERT + VITS)
         try:
-            temp_wav = os.path.join(OUTPUTS_DIR, f"{session_id}_raw.wav")
-            AudioProcessor.convert_to_wav(final_path, temp_wav, target_sr=TARGET_SAMPLE_RATE)
-            samples, sr, ch = AudioProcessor.read_wav_pcm16(temp_wav)
-            samples_float = np.array(samples, dtype=np.float32) / 32768.0
-
-            from .audio.phoneme_prosody_matcher import PhonemeProsodyMatcher
-            matcher = PhonemeProsodyMatcher.get_instance()
-            out_float = matcher.apply_syllable_prosody(
-                samples_float,
-                text=norm_text,
-                style_id=style_profile.style_id
-            )
-            engine_name = f"phoneme-prosody-{style_profile.style_id}"
-
-            out_pcm16 = np.clip(out_float * 32767.0, -32768, 32767).astype(np.int16).tolist()
+            temp_raw_wav = os.path.join(OUTPUTS_DIR, f"{session_id}_raw.wav")
+            AudioProcessor.convert_to_wav(final_path, temp_raw_wav, target_sr=TARGET_SAMPLE_RATE)
+            
             final_wav_filename = f"{session_id}_v7.wav"
             final_wav_path = os.path.join(OUTPUTS_DIR, final_wav_filename)
-            AudioProcessor.write_wav_pcm16(final_wav_path, out_pcm16, sample_rate=TARGET_SAMPLE_RATE)
-            final_path = final_wav_path
+            
+            from .audio.neural_rvc_engine import NeuralRVCEngine
+            rvc_engine = NeuralRVCEngine.get_instance()
+            
+            success = rvc_engine.convert(
+                input_wav_path=temp_raw_wav,
+                output_wav_path=final_wav_path,
+                style_id=style_profile.style_id
+            )
+            
+            if success and os.path.exists(final_wav_path) and os.path.getsize(final_wav_path) > 1000:
+                engine_name = f"neural-vits-{style_profile.style_id}"
+                final_path = final_wav_path
+            else:
+                final_wav_filename = final_filename
         except Exception as e:
-            print(f"Phoneme Prosody notice: {e}")
+            print(f"Neural VC Notice: {e}")
             final_wav_filename = final_filename
 
     elapsed = round(time.time() - t0, 2)

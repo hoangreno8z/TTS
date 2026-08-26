@@ -49,7 +49,7 @@ def get_index_path_from_model(sid, speaker_id=None):
                     score = (
                         0 if indexed_speaker_id == target_speaker_id else 1,
                         0 if standard_match else 1,
-                        0 if os.path.abspath(index_root) == os.path.abspath(roots[0]) else 1,
+                        0 if roots[0] and os.path.abspath(index_root) == os.path.abspath(roots[0]) else 1,
                         -os.path.getmtime(path),
                         path.lower(),
                     )
