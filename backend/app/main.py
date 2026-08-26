@@ -433,6 +433,150 @@ async def upload_style_samples(
         "style_id": clean_style_id,
         "profile": profile
     }
+
+@app.get("/styles/{style_id}/samples")
+def get_style_samples_endpoint(style_id: str):
+    """Returns the list of all audio samples belonging specifically to the chosen style."""
+    clean_style_id = style_id.lower().strip().replace(" ", "_")
+    samples = []
+    
+    # 1. Check data/raw/{style_id}
+    raw_dir = os.path.join(PROJECT_ROOT, "data", "raw", clean_style_id)
+    if os.path.exists(raw_dir):
+        for f in sorted(os.listdir(raw_dir)):
+            if f.lower().endswith((".wav", ".mp3", ".m4a", ".flac", ".ogg")):
+                fpath = os.path.join(raw_dir, f)
+                try:
+                    sz = os.path.getsize(fpath)
+                    import soundfile as sf
+                    info = sf.info(fpath)
+                    dur = info.duration
+                except Exception:
+                    dur = 0.0
+                    sz = os.path.getsize(fpath) if os.path.exists(fpath) else 0
+                samples.append({
+                    "filename": f,
+                    "source": "raw",
+                    "source_label": "Đoạn cắt / Tải lên",
+                    "duration_sec": round(dur, 2),
+                    "size_kb": round(sz / 1024, 1),
+                    "audio_url": f"/styles/{clean_style_id}/sample-audio/{f}"
+                })
+
+    # 2. Check data/voice/{style_id}
+    voice_dir = os.path.join(PROJECT_ROOT, "data", "voice", clean_style_id)
+    if os.path.exists(voice_dir):
+        for f in sorted(os.listdir(voice_dir)):
+            if f.lower().endswith((".wav", ".mp3", ".m4a", ".flac", ".ogg")):
+                if not any(s["filename"] == f for s in samples):
+                    fpath = os.path.join(voice_dir, f)
+                    try:
+                        sz = os.path.getsize(fpath)
+                        import soundfile as sf
+                        info = sf.info(fpath)
+                        dur = info.duration
+                    except Exception:
+                        dur = 0.0
+                        sz = os.path.getsize(fpath) if os.path.exists(fpath) else 0
+                    samples.append({
+                        "filename": f,
+                        "source": "voice",
+                        "source_label": "Mẫu chuẩn",
+                        "duration_sec": round(dur, 2),
+                        "size_kb": round(sz / 1024, 1),
+                        "audio_url": f"/styles/{clean_style_id}/sample-audio/{f}"
+                    })
+
+    return {
+        "status": "success",
+        "style_id": clean_style_id,
+        "total_samples": len(samples),
+        "samples": samples
+    }
+
+@app.get("/styles/{style_id}/sample-audio/{filename}")
+def stream_style_sample_audio_endpoint(style_id: str, filename: str):
+    """Streams a specific sample audio file for preview listening."""
+    clean_style_id = style_id.lower().strip().replace(" ", "_")
+    clean_fname = os.path.basename(filename)
+    
+    raw_path = os.path.join(PROJECT_ROOT, "data", "raw", clean_style_id, clean_fname)
+    voice_path = os.path.join(PROJECT_ROOT, "data", "voice", clean_style_id, clean_fname)
+    
+    target_path = None
+    if os.path.exists(raw_path):
+        target_path = raw_path
+    elif os.path.exists(voice_path):
+        target_path = voice_path
+        
+    if not target_path or not os.path.exists(target_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File mẫu không tồn tại.")
+        
+    media_type = "audio/wav" if clean_fname.lower().endswith(".wav") else "audio/mpeg"
+    return FileResponse(target_path, media_type=media_type, filename=clean_fname)
+
+@app.delete("/styles/{style_id}/samples/{filename}")
+def delete_style_sample_endpoint(style_id: str, filename: str):
+    """Deletes a poor-quality or unwanted audio sample and automatically recalibrates the Style profile."""
+    from app.audio.voice_spectral_profiler import VoiceSpectralProfiler
+    clean_style_id = style_id.lower().strip().replace(" ", "_")
+    clean_fname = os.path.basename(filename)
+    
+    deleted = False
+    raw_path = os.path.join(PROJECT_ROOT, "data", "raw", clean_style_id, clean_fname)
+    voice_path = os.path.join(PROJECT_ROOT, "data", "voice", clean_style_id, clean_fname)
+    
+    if os.path.exists(raw_path):
+        try:
+            os.remove(raw_path)
+            deleted = True
+        except OSError:
+            pass
+    if os.path.exists(voice_path):
+        try:
+            os.remove(voice_path)
+            deleted = True
+        except OSError:
+            pass
+        
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Không tìm thấy file '{clean_fname}' để xóa.")
+        
+    # Find all remaining samples to recalibrate profile
+    remaining_files = []
+    raw_dir = os.path.join(PROJECT_ROOT, "data", "raw", clean_style_id)
+    if os.path.exists(raw_dir):
+        for f in os.listdir(raw_dir):
+            if f.lower().endswith((".wav", ".mp3", ".m4a", ".flac")):
+                remaining_files.append(os.path.join(raw_dir, f))
+                
+    voice_dir = os.path.join(PROJECT_ROOT, "data", "voice", clean_style_id)
+    if os.path.exists(voice_dir):
+        for f in os.listdir(voice_dir):
+            if f != "reference.wav" and f.lower().endswith((".wav", ".mp3", ".m4a", ".flac")):
+                full_p = os.path.join(voice_dir, f)
+                if full_p not in remaining_files:
+                    remaining_files.append(full_p)
+
+    updated_profile = None
+    if remaining_files:
+        profiler = VoiceSpectralProfiler(target_sr=TARGET_SAMPLE_RATE)
+        name_display = f"Phong cách {clean_style_id.title()}"
+        updated_profile = profiler.process_audio_files(
+            file_paths=remaining_files,
+            style_id=clean_style_id,
+            style_name=name_display
+        )
+
+    return {
+        "status": "success",
+        "message": f"Đã xóa thành công mẫu '{clean_fname}' và hiệu chỉnh lại bộ lọc AI cho Style '{clean_style_id}'!",
+        "style_id": clean_style_id,
+        "deleted_file": clean_fname,
+        "remaining_samples_count": len(remaining_files),
+        "profile": updated_profile
+    }
+
 @app.post("/audio/slice-and-profile")
 async def slice_and_profile_audio(
     file: UploadFile = File(...),

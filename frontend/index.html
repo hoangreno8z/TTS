@@ -136,10 +136,14 @@
             <i class="fa-solid fa-masks-theater text-indigo-400"></i> Chọn Giọng & Phong Cách
           </label>
           <div class="flex items-center space-x-1.5">
-            <button id="btnRenameCurrentStyle" type="button" class="text-xs text-amber-400 hover:text-amber-300 transition flex items-center gap-1 font-medium bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20 active:scale-95 cursor-pointer" title="Đổi tên Style đang chọn">
+            <button id="btnOpenViewSamplesModal" type="button" class="text-xs text-teal-300 hover:text-teal-200 transition flex items-center gap-1 font-semibold bg-teal-500/15 px-2.5 py-1 rounded-lg border border-teal-500/30 active:scale-95 cursor-pointer" title="Xem danh sách mẫu MP3 của Style đang chọn">
+              <i class="fa-solid fa-list-check text-[10px]"></i> Xem Mẫu
+              <span id="badgeStyleSamplesCount" class="px-1.5 py-0.2 rounded-full bg-teal-500/30 text-teal-200 text-[10px] font-mono font-bold">0</span>
+            </button>
+            <button id="btnRenameCurrentStyle" type="button" class="text-xs text-amber-400 hover:text-amber-300 transition flex items-center gap-1 font-medium bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 active:scale-95 cursor-pointer" title="Đổi tên Style đang chọn">
               <i class="fa-solid fa-pen-to-square text-[10px]"></i> Sửa Tên
             </button>
-            <button id="btnOpenAddStyle" class="text-xs text-indigo-400 hover:text-indigo-300 transition flex items-center gap-1 font-medium bg-indigo-500/10 px-2 py-0.5 rounded-lg border border-indigo-500/20 active:scale-95 cursor-pointer">
+            <button id="btnOpenAddStyle" class="text-xs text-indigo-400 hover:text-indigo-300 transition flex items-center gap-1 font-medium bg-indigo-500/10 px-2 py-1 rounded-lg border border-indigo-500/20 active:scale-95 cursor-pointer">
               <i class="fa-solid fa-plus text-[10px]"></i> Thêm
             </button>
           </div>
@@ -974,6 +978,70 @@
     </div>
   </div>
 
+  <!-- MODAL XEM MẪU & QUẢN LÝ MẪU MP3 THEO STYLE -->
+  <div id="styleSamplesModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="glass-card bg-slate-900/95 border border-teal-500/40 rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-sm">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-100 text-sm sm:text-base flex items-center gap-1.5">
+              <span>Mẫu Giọng:</span>
+              <span id="modalCurrentStyleName" class="text-teal-400">Lộc Đỉnh Ký</span>
+            </h3>
+            <p class="text-[11px] text-slate-400">Xem và quản lý các file âm thanh đã nạp cho Style này</p>
+          </div>
+        </div>
+        <button id="btnCloseSamplesModal" type="button" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Quick Summary Banner -->
+      <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+        <span class="text-slate-300 flex items-center gap-1.5">
+          <i class="fa-solid fa-layer-group text-indigo-400"></i>
+          <span>Tổng số mẫu: <strong id="modalSamplesCountText" class="text-teal-300 font-mono">0</strong> file</span>
+        </span>
+        <button id="btnSamplesModalAddAudio" type="button" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-[11px] flex items-center gap-1 shadow-sm transition active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-plus text-[9px]"></i> Nạp Thêm Mẫu
+        </button>
+      </div>
+
+      <!-- Hidden Audio Player for Sample Audition -->
+      <div id="sampleAuditionBox" class="hidden bg-slate-950 p-2.5 rounded-xl border border-indigo-500/40 space-y-1.5 animate-in fade-in">
+        <div class="flex items-center justify-between text-[11px]">
+          <span class="text-indigo-300 font-semibold flex items-center gap-1">
+            <i class="fa-solid fa-volume-high text-indigo-400"></i> Đang nghe: <span id="auditionFilename" class="text-slate-200 font-mono">sample.wav</span>
+          </span>
+          <button id="btnCloseAudition" type="button" class="text-slate-400 hover:text-slate-200 text-xs">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <audio id="sampleAuditionPlayer" controls class="w-full h-8 accent-indigo-500"></audio>
+      </div>
+
+      <!-- Samples List Container (Scrollable) -->
+      <div id="styleSamplesListContainer" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar min-h-[160px] max-h-[340px]">
+        <!-- Dynamic Sample Items inserted here -->
+        <div class="text-center py-8 text-slate-500 text-xs">Đang tải danh sách mẫu...</div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="border-t border-slate-800 pt-3 flex items-center justify-between">
+        <span class="text-[11px] text-slate-400 italic">Bấm nút xóa để loại bỏ mẫu kém chất lượng</span>
+        <button id="btnCloseSamplesModalBottom" type="button" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition cursor-pointer">
+          Đóng
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- RENAME STYLE MODAL -->
   <div id="renameStyleModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="glass-card bg-slate-900/95 border border-amber-500/40 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 animate-in fade-in">
@@ -1036,7 +1104,7 @@
     </div>
   </footer>
 
-  <script src="/app.js?v=20260826_standalone_dsp_v11"></script>
+  <script src="/app.js?v=20260826_view_and_delete_samples_v12"></script>
 </body>
 </html>
 

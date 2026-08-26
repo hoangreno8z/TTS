@@ -42,15 +42,20 @@ class VoiceSpectralProfiler:
         combined_audio = []
         for fp in file_paths:
             try:
-                # Read audio file (MP3, WAV, etc.)
-                data, sr = sf.read(fp)
+                # Read audio file with soundfile or librosa fallback
+                try:
+                    data, sr = sf.read(fp)
+                except Exception:
+                    import librosa
+                    data, sr = librosa.load(fp, sr=None)
+
                 if len(data.shape) > 1:
                     data = np.mean(data, axis=1)
                 
                 # Resample to target_sr
                 if sr != self.target_sr:
-                    num_samples = int(len(data) * float(self.target_sr) / sr)
-                    data = scipy.signal.resample(data, num_samples)
+                    import librosa
+                    data = librosa.resample(data, orig_sr=sr, target_sr=self.target_sr)
                 
                 # Remove extreme silence/DC offset
                 data = data - np.mean(data)
