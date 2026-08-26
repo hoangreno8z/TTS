@@ -27,15 +27,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnHeaderToolsMenu = document.getElementById("btnHeaderToolsMenu");
   const headerToolsDropdown = document.getElementById("headerToolsDropdown");
 
-  function toggleToolsMenu() {
+  function toggleToolsMenu(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (headerToolsDropdown) {
-      headerToolsDropdown.classList.toggle("hidden");
+      if (headerToolsDropdown.classList.contains("hidden")) {
+        headerToolsDropdown.classList.remove("hidden");
+        headerToolsDropdown.style.display = "block";
+      } else {
+        headerToolsDropdown.classList.add("hidden");
+        headerToolsDropdown.style.display = "none";
+      }
     }
   }
 
   function closeToolsMenu() {
     if (headerToolsDropdown) {
       headerToolsDropdown.classList.add("hidden");
+      headerToolsDropdown.style.display = "none";
     }
   }
 
@@ -43,14 +54,11 @@ document.addEventListener("DOMContentLoaded", () => {
   window.closeToolsMenu = closeToolsMenu;
 
   if (btnHeaderToolsMenu) {
-    btnHeaderToolsMenu.addEventListener("click", (e) => {
-      e.stopPropagation();
-      toggleToolsMenu();
-    });
+    btnHeaderToolsMenu.addEventListener("click", toggleToolsMenu);
   }
 
   document.addEventListener("click", (e) => {
-    if (headerToolsDropdown && !headerToolsDropdown.contains(e.target) && e.target !== btnHeaderToolsMenu) {
+    if (headerToolsDropdown && !headerToolsDropdown.contains(e.target) && e.target !== btnHeaderToolsMenu && !btnHeaderToolsMenu.contains(e.target)) {
       closeToolsMenu();
     }
   });
