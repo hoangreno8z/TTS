@@ -300,68 +300,29 @@ async def synthesize(req: TTSRequest):
                     except OSError:
                         pass
 
-        # Apply Dual-Core / RVC Neural Transformation
-        acoustic_profile = getattr(style_profile, "acoustic_profile", None)
-        if style_profile.style_id in ("loc_dinh_ky", "lali5") or acoustic_profile:
-            try:
-                temp_wav = os.path.join(OUTPUTS_DIR, f"{session_id}_raw.wav")
-                AudioProcessor.convert_to_wav(final_path, temp_wav, target_sr=TARGET_SAMPLE_RATE)
-                samples, sr, ch = AudioProcessor.read_wav_pcm16(temp_wav)
-                samples_float = np.array(samples, dtype=np.float32) / 32768.0
+        # Apply Character Voice Morphing & Spectral Transformation Pipeline
+        try:
+            temp_wav = os.path.join(OUTPUTS_DIR, f"{session_id}_raw.wav")
+            AudioProcessor.convert_to_wav(final_path, temp_wav, target_sr=TARGET_SAMPLE_RATE)
+            samples, sr, ch = AudioProcessor.read_wav_pcm16(temp_wav)
+            samples_float = np.array(samples, dtype=np.float32) / 32768.0
 
-                if os.path.exists(os.path.join(PROJECT_ROOT, "models", "rvc", "loc-dinh-ky_60e_6120s.pth")) and style_profile.style_id in ("loc_dinh_ky", "lali5"):
-                    # REAL TRAINED RVC v2 NEURAL INFERENCE ENGINE
-                    from app.audio.rvc_inference_engine import RVCInferenceEngine
-                    rvc_engine = RVCInferenceEngine.get_instance()
-                    out_float = rvc_engine.convert_voice(
-                        samples_float,
-                        source_sr=TARGET_SAMPLE_RATE,
-                        pitch_shift_semitones=0.0,
-                        index_rate=0.75
-                    )
-                    engine_name = "rvc-v2-loc-dinh-ky-neural"
-                elif req.core_mode == "fourier" or req.core_mode == "parametric":
-                    # CORE 1: FOURIER STFT SPECTRAL MATCHING ENGINE (0-AI / 38ms CPU)
-                    from app.audio.fourier_spectral_engine import FourierSpectralEngine
-                    fourier_engine = FourierSpectralEngine.get_instance()
-                    out_float = fourier_engine.apply_spectral_transfer(
-                        samples_float,
-                        sr=TARGET_SAMPLE_RATE,
-                        morph_strength=0.85,
-                        formant_boost_db=2.5
-                    )
-                    engine_name = "fourier-stft-spectral-matching"
-                else:
-                    # CORE 2: LOCAL NEURAL CORE (LOCAL AI / TIMBRE LATENT EMBEDDING)
-                    from app.audio.neural_vc_core import NeuralVCCore
-                    core2 = NeuralVCCore(sample_rate=TARGET_SAMPLE_RATE)
-                    # Load reference audio if available
-                    speaker_emb = {"peak_mel_band": 25, "energy_rms": 0.04}
-                    if ref_audio and os.path.exists(ref_audio):
-                        r_samples, r_sr, _ = AudioProcessor.read_wav_pcm16(ref_audio)
-                        r_float = np.array(r_samples, dtype=np.float32) / 32768.0
-                        speaker_emb = core2.extract_speaker_embedding(r_float)
-                    
-                    pitch_shift = acoustic_profile.get("pitch_shift_semitones", 3.66) if acoustic_profile else 3.66
-                    out_float = core2.convert_voice(
-                        samples_float,
-                        speaker_embedding=speaker_emb,
-                        pitch_shift_semitones=pitch_shift,
-                        timbre_strength=0.85
-                    )
-                    engine_name = "local-neural-vc"
+            from .audio.fourier_spectral_engine import FourierSpectralEngine
+            fourier_engine = FourierSpectralEngine.get_instance()
+            out_float = fourier_engine.apply_voice_morphing(
+                samples_float,
+                style_id=style_profile.style_id,
+                sr=TARGET_SAMPLE_RATE
+            )
+            engine_name = f"fourier-morph-{style_profile.style_id}"
 
-                from app.audio.audio_enhancer import AudioEnhancer
-                out_float = AudioEnhancer.clean_and_polish_audio(out_float, sr=TARGET_SAMPLE_RATE)
-                out_pcm16 = np.clip(out_float * 32767.0, -32768, 32767).astype(np.int16).tolist()
-                final_wav_filename = f"{session_id}_v7.wav"
-                final_wav_path = os.path.join(OUTPUTS_DIR, final_wav_filename)
-                AudioProcessor.write_wav_pcm16(final_wav_path, out_pcm16, sample_rate=TARGET_SAMPLE_RATE)
-                final_path = final_wav_path
-            except Exception as e:
-                print(f"V7 Dual-Core Morphing notice: {e}")
-                final_wav_filename = final_filename
-        else:
+            out_pcm16 = np.clip(out_float * 32767.0, -32768, 32767).astype(np.int16).tolist()
+            final_wav_filename = f"{session_id}_v7.wav"
+            final_wav_path = os.path.join(OUTPUTS_DIR, final_wav_filename)
+            AudioProcessor.write_wav_pcm16(final_wav_path, out_pcm16, sample_rate=TARGET_SAMPLE_RATE)
+            final_path = final_wav_path
+        except Exception as e:
+            print(f"Voice Morphing notice: {e}")
             final_wav_filename = final_filename
 
     elapsed = round(time.time() - t0, 2)
