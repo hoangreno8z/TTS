@@ -31,8 +31,8 @@ DEFAULT_STYLES: Dict[str, StyleProfile] = {
         description="Lồng tiếng Châu Tinh Trì",
         speed=1.0,
         pause_multiplier=1.0,
-        pitch_adjustment=0.0,
-        energy_adjustment=1.0,
+        pitch_adjustment=4.0,
+        energy_adjustment=1.1,
         prompt_context="[Phong cách Lộc Đỉnh Ký]",
         ref_audio_subfolder="loc_dinh_ky"
     ),

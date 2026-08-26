@@ -324,10 +324,12 @@ async def synthesize(req: TTSRequest):
             from .audio.neural_rvc_engine import NeuralRVCEngine
             rvc_engine = NeuralRVCEngine.get_instance()
             
+            pitch_shift = getattr(style_profile, "pitch_adjustment", 4.0) or 4.0
             success = rvc_engine.convert(
                 input_wav_path=temp_raw_wav,
                 output_wav_path=final_wav_path,
-                style_id=style_profile.style_id
+                style_id=style_profile.style_id,
+                f0_up_key=int(round(pitch_shift))
             )
             
             if success and os.path.exists(final_wav_path) and os.path.getsize(final_wav_path) > 1000:

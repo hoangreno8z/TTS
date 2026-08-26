@@ -46,7 +46,7 @@ class NeuralRVCEngine:
         except Exception as e:
             print(f"NeuralRVCEngine init notice: {e}")
 
-    def convert(self, input_wav_path: str, output_wav_path: str, style_id: str = "loc_dinh_ky") -> bool:
+    def convert(self, input_wav_path: str, output_wav_path: str, style_id: str = "loc_dinh_ky", f0_up_key: int = 4) -> bool:
         if self.vc is None:
             return False
 
@@ -79,12 +79,12 @@ class NeuralRVCEngine:
             msg, out_audio = self.vc.vc_single(
                 sid=0,
                 input_audio_path=input_wav_path,
-                f0_up_key=0,
+                f0_up_key=int(f0_up_key),
                 f0_method="pm",
                 file_index=index_file,
-                index_rate=0.75,
+                index_rate=0.95,
                 resample_sr=0,
-                rms_mix_rate=0.25,
+                rms_mix_rate=0.1,
                 protect=0.33
             )
             os.chdir(old_cwd)
