@@ -1007,9 +1007,12 @@
           <i class="fa-solid fa-layer-group text-indigo-400"></i>
           <span>Tổng số mẫu: <strong id="modalSamplesCountText" class="text-teal-300 font-mono">0</strong> file</span>
         </span>
-        <button id="btnSamplesModalAddAudio" type="button" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-[11px] flex items-center gap-1 shadow-sm transition active:scale-95 cursor-pointer">
-          <i class="fa-solid fa-plus text-[9px]"></i> Nạp Thêm Mẫu
-        </button>
+        <div class="flex items-center gap-2">
+          <input type="file" id="modalDirectFileInput" multiple accept="audio/*,.wav,.mp3,.m4a,.flac,.ogg" class="hidden">
+          <button id="btnSamplesModalAddAudio" type="button" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-[11px] flex items-center gap-1 shadow-sm transition active:scale-95 cursor-pointer">
+            <i class="fa-solid fa-plus text-[9px]"></i> Nạp Thêm Mẫu
+          </button>
+        </div>
       </div>
 
       <!-- Hidden Audio Player for Sample Audition -->
@@ -1107,7 +1110,7 @@
     </div>
   </footer>
 
-  <script src="/app.js?v=20260826_smart_diag_v16"></script>
+  <script src="/app.js?v=20260826_direct_modal_upload_v17"></script>
 </body>
 </html>
 

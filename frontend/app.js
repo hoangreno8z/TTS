@@ -1143,10 +1143,54 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-  if (btnSamplesModalAddAudio) {
+  const modalDirectFileInput = document.getElementById("modalDirectFileInput");
+
+  if (btnSamplesModalAddAudio && modalDirectFileInput) {
     btnSamplesModalAddAudio.addEventListener("click", () => {
-      closeStyleSamplesModal();
-      if (voiceUpload) voiceUpload.click();
+      modalDirectFileInput.value = "";
+      modalDirectFileInput.click();
+    });
+  }
+
+  if (modalDirectFileInput) {
+    modalDirectFileInput.addEventListener("change", async (e) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      if (styleSamplesListContainer) {
+        styleSamplesListContainer.innerHTML = `<div class="text-center py-6 text-slate-300 text-xs"><i class="fa-solid fa-spinner fa-spin text-teal-400 mr-2"></i> Đang nạp ${files.length} file vào Style ${activeStyle}...</div>`;
+      }
+
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        let dur = 5.0;
+        try {
+          const arrBuf = await f.arrayBuffer();
+          const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const audioBuf = await tempCtx.decodeAudioData(arrBuf);
+          dur = audioBuf.duration;
+        } catch (err) {}
+
+        // Save permanently to IndexedDB
+        await dbSaveSample(activeStyle, f.name, f, dur.toFixed(1), (f.size / 1024).toFixed(1), "Tải lên");
+      }
+
+      // If backend online, also send to server
+      try {
+        const formData = new FormData();
+        formData.append("style_id", activeStyle);
+        for (let i = 0; i < files.length; i++) {
+          formData.append("files", files[i]);
+        }
+        await fetch(`${API_BASE}/styles/upload-samples`, {
+          method: "POST",
+          headers: { "ngrok-skip-browser-warning": "69420" },
+          body: formData
+        });
+      } catch (netErr) {}
+
+      await loadAndRenderStyleSamples();
+      await updateActiveStyleSampleCount();
     });
   }
 
