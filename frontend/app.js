@@ -407,34 +407,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnTestServerConnection) {
     btnTestServerConnection.addEventListener("click", async () => {
-      const url = serverBackendUrlInput.value.trim().replace(/\/+$/, "");
+      let url = serverBackendUrlInput.value.trim().replace(/\/+$/, "");
       if (!url) return;
-      serverTestResult.textContent = "Đang kiểm tra kết nối...";
+
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        url = "https://" + url;
+        serverBackendUrlInput.value = url;
+      }
+
+      if (window.location.protocol === "https:" && url.startsWith("http://") && !url.includes("127.0.0.1") && !url.includes("localhost")) {
+        serverTestResult.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Vercel (HTTPS) chặn HTTP thường. Bạn hãy dùng link <strong>HTTPS</strong> của Render hoặc Ngrok!';
+        serverTestResult.className = "text-[11px] text-amber-300 font-medium";
+        return;
+      }
+
+      serverTestResult.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-indigo-400"></i> Đang kiểm tra kết nối...';
       serverTestResult.className = "text-[11px] text-indigo-400";
 
       try {
         const res = await fetch(`${url}/health`, { 
           headers: { "ngrok-skip-browser-warning": "69420" },
-          signal: AbortSignal.timeout(6000) 
+          signal: AbortSignal.timeout(8000) 
         });
         if (res.ok) {
           const d = await res.json();
-          serverTestResult.textContent = ` Kết nối thành công (${d.selected_engine})`;
+          serverTestResult.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> Kết nối thành công! (${(d.selected_engine || "AI").toUpperCase()})`;
           serverTestResult.className = "text-[11px] text-emerald-400 font-semibold";
+        } else if (res.status === 502 || res.status === 503) {
+          serverTestResult.innerHTML = '<i class="fa-solid fa-clock text-amber-400"></i> Render đang cài đặt dở (Build). Hãy đợi 1-2 phút cho Render hiện Live rồi thử lại!';
+          serverTestResult.className = "text-[11px] text-amber-300 font-medium";
         } else {
           throw new Error("HTTP " + res.status);
         }
       } catch (e) {
-        serverTestResult.textContent = ` Không thể kết nối: ${e.message}`;
-        serverTestResult.className = "text-[11px] text-rose-400 font-semibold";
+        if (url.includes("onrender.com")) {
+          serverTestResult.innerHTML = '<i class="fa-solid fa-clock text-amber-400"></i> Render đang cài đặt (Build). Hãy đợi 1-2 phút cho Render hiện chữ Live xanh rồi bấm lại!';
+          serverTestResult.className = "text-[11px] text-amber-300 font-medium";
+        } else {
+          serverTestResult.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-400"></i> Không thể kết nối: ${e.message}`;
+          serverTestResult.className = "text-[11px] text-rose-400 font-semibold";
+        }
       }
     });
   }
 
   if (btnSaveServerUrl) {
     btnSaveServerUrl.addEventListener("click", () => {
-      const url = serverBackendUrlInput.value.trim().replace(/\/+$/, "");
+      let url = serverBackendUrlInput.value.trim().replace(/\/+$/, "");
       if (!url) return;
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        url = "https://" + url;
+      }
       localStorage.setItem("lapque_custom_backend_url", url);
       API_BASE = url;
       closeServerModal();
