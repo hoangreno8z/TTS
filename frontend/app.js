@@ -1121,28 +1121,42 @@ document.addEventListener("DOMContentLoaded", () => {
         const curStyleObj = loadedStylesList.find(s => s.style_id === sid);
         const sname = curStyleObj ? curStyleObj.name : sid;
 
-        const formData = new FormData();
-        formData.append("style_id", sid);
-        formData.append("style_name", sname);
-        
-        let validFileCount = 0;
+        function blobToBase64(b) {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(b);
+          });
+        }
+
+        const sampleItems = [];
         for (let i = 0; i < localSamples.length; i++) {
           const sample = localSamples[i];
           if (!sample || !sample.blob) continue;
           const fileBlob = sample.blob instanceof Blob ? sample.blob : new Blob([sample.blob], { type: "audio/wav" });
-          formData.append("files", fileBlob, sample.filename || `sample_${i + 1}.wav`);
-          validFileCount++;
+          const b64 = await blobToBase64(fileBlob);
+          sampleItems.push({
+            filename: sample.filename || `sample_${i + 1}.wav`,
+            data_base64: b64
+          });
         }
 
-        if (validFileCount === 0) {
+        if (sampleItems.length === 0) {
           alert("Không tìm thấy dữ liệu âm thanh hợp lệ trong bộ nhớ.");
           return;
         }
 
-        const res = await fetch(`${API_BASE}/styles/upload-samples`, {
+        const res = await fetch(`${API_BASE}/styles/upload-samples-json`, {
           method: "POST",
-          headers: { "ngrok-skip-browser-warning": "69420" },
-          body: formData
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            style_id: sid,
+            style_name: sname,
+            samples: sampleItems
+          })
         });
 
         if (!res.ok) {
@@ -1161,8 +1175,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const data = await res.json();
-        const vectorCount = (data.profile && data.profile.faiss_timbre_vectors) ? data.profile.faiss_timbre_vectors : validFileCount;
-        alert(`Đã đồng bộ thành công ${validFileCount} mẫu lên Máy Chủ AI để huấn luyện âm vị!\n- Số mẫu: ${validFileCount}\n- Vector phân tích: ${vectorCount}`);
+        const vectorCount = (data.profile && data.profile.faiss_timbre_vectors) ? data.profile.faiss_timbre_vectors : sampleItems.length;
+        alert(`Đã đồng bộ thành công ${sampleItems.length} mẫu lên Máy Chủ AI để huấn luyện âm vị!\n- Số mẫu: ${sampleItems.length}\n- Vector phân tích: ${vectorCount}`);
         await loadStyles();
         await loadAndRenderStyleSamples();
       } catch (e) {
