@@ -139,7 +139,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================================================================
   async function checkHealthAndLoadStyles() {
     try {
-      const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(4000) });
+      const res = await fetch(`${API_BASE}/health`, { 
+        headers: { "ngrok-skip-browser-warning": "69420" },
+        signal: AbortSignal.timeout(4000) 
+      });
       if (res.ok) {
         const data = await res.json();
         if (backendStatusText) backendStatusText.textContent = `Online • ${data.selected_engine.toUpperCase()}`;
@@ -157,7 +160,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadStyles() {
     try {
-      const res = await fetch(`${API_BASE}/styles`, { signal: AbortSignal.timeout(4000) });
+      const res = await fetch(`${API_BASE}/styles`, { 
+        headers: { "ngrok-skip-browser-warning": "69420" },
+        signal: AbortSignal.timeout(4000) 
+      });
       if (res.ok) {
         const styles = await res.json();
         if (styles && styles.length > 0) {
@@ -407,7 +413,10 @@ document.addEventListener("DOMContentLoaded", () => {
       serverTestResult.className = "text-[11px] text-indigo-400";
 
       try {
-        const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(4000) });
+        const res = await fetch(`${url}/health`, { 
+          headers: { "ngrok-skip-browser-warning": "69420" },
+          signal: AbortSignal.timeout(6000) 
+        });
         if (res.ok) {
           const d = await res.json();
           serverTestResult.textContent = ` Kết nối thành công (${d.selected_engine})`;
