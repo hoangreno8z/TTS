@@ -210,21 +210,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (badge) badge.textContent = `Gắn cho: ${styleName}`;
   }
 
-    // Update card active classes
-    document.querySelectorAll(".style-card").forEach(b => {
-      const isCardActive = b.getAttribute("data-style") === activeStyle;
-      if (isCardActive) {
-        b.className = "style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer border-indigo-500/60 bg-indigo-500/15 shadow-md shadow-indigo-500/10 active ring-1 ring-indigo-500/40";
-        const titleSpan = b.querySelector("span.font-bold");
-        if (titleSpan) titleSpan.className = "font-bold text-xs sm:text-sm text-indigo-300 flex items-center gap-1.5 truncate";
-      } else {
-        b.className = "style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer border-slate-800 bg-slate-900/60 hover:border-slate-700";
-        const titleSpan = b.querySelector("span.font-bold");
-        if (titleSpan) titleSpan.className = "font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-1.5 truncate";
-      }
-    });
-  }
-
   // Pre-render immediately on load
   renderStyles(DEFAULT_FALLBACK_STYLES);
   updateActiveStyleUI();
