@@ -126,16 +126,29 @@ def create_custom_style(req: CreateStyleRequest):
         "style": prof.__dict__
     }
 
+class RenameStyleRequest(BaseModel):
+    style_id: str
+    new_name: str
+
+@app.post("/styles/rename")
+async def rename_style_endpoint(req: RenameStyleRequest):
+    if not req.new_name or not req.new_name.strip():
+        raise HTTPException(status_code=400, detail="Tên mới không được để trống")
+    success = style_manager.rename_style(req.style_id, req.new_name.strip())
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy style '{req.style_id}'")
+    return {"status": "success", "message": f"Đã đổi tên thành công: {req.new_name.strip()}"}
+
 @app.post("/tts", response_model=TTSResponse)
 async def synthesize(req: TTSRequest):
     t0 = time.time()
     
-    # 1. Validate & Normalize Text
+    # 1. Validate & Normalize Text (Không giới hạn ký tự, tự động phân đoạn)
     raw_text = req.text.strip()
-    if len(raw_text) > 5000:
+    if not raw_text:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Text exceeds maximum character limit of 5000 (got {len(raw_text)})."
+            detail="Văn bản không được để trống."
         )
 
     norm_text = VietnameseNormalizer.normalize(raw_text)
@@ -427,7 +440,8 @@ async def slice_and_profile_audio(
     end_sec: float = Form(...),
     style_id: str = Form(...),
     style_name: Optional[str] = Form(None),
-    description: Optional[str] = Form(None)
+    description: Optional[str] = Form(None),
+    custom_slice_name: Optional[str] = Form(None)
 ):
     """Slices a long MP3/WAV file from start_sec to end_sec and runs Fourier & Neural profiling."""
     import soundfile as sf
@@ -462,8 +476,13 @@ async def slice_and_profile_audio(
 
         sliced_data = data[start_sample:end_sample].astype(np.float32)
 
-        # 3. Save sliced WAV
-        slice_filename = f"slice_{int(start_sec)}_{int(end_sec)}_{os.path.splitext(fname)[0]}.wav"
+        # 3. Save sliced WAV with custom name or default slice name
+        if custom_slice_name and custom_slice_name.strip():
+            clean_name = custom_slice_name.strip().replace(" ", "_").replace(".wav", "").replace(".mp3", "")
+            slice_filename = f"{clean_name}.wav"
+        else:
+            slice_filename = f"slice_{int(start_sec)}_{int(end_sec)}_{os.path.splitext(fname)[0]}.wav"
+
         slice_path = os.path.join(target_raw_dir, slice_filename)
         sf.write(slice_path, sliced_data, sr)
 

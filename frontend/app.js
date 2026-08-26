@@ -1,12 +1,12 @@
 /**
- * LAPQUE Personal Vietnamese TTS Studio - Frontend Client Logic
+ * HUY HOÀNG Studio Lồng Tiếng AI Tiếng Việt - Frontend Client Logic
  */
 
 document.addEventListener("DOMContentLoaded", () => {
   // Support dynamic Backend URL when deployed on Vercel
   const savedBackendUrl = localStorage.getItem("lapque_custom_backend_url");
   const isVercel = window.location.origin.includes("vercel.app");
-  const API_BASE = savedBackendUrl || (isVercel ? "http://127.0.0.1:8000" : window.location.origin);
+  let API_BASE = savedBackendUrl || (isVercel ? "http://127.0.0.1:8000" : window.location.origin);
 
   // DOM Elements
   const textInput = document.getElementById("textInput");
@@ -18,8 +18,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const progressStatus = document.getElementById("progressStatus");
   const progressBar = document.getElementById("progressBar");
   const progressTimer = document.getElementById("progressTimer");
-  const healthBadge = document.getElementById("healthBadge");
-  const healthText = document.getElementById("healthText");
+  const backendPulse = document.getElementById("backendPulse");
+  const backendStatusText = document.getElementById("backendStatusText");
 
   const audioPlayer = document.getElementById("audioPlayer");
   const resultBadge = document.getElementById("resultBadge");
@@ -34,35 +34,46 @@ document.addEventListener("DOMContentLoaded", () => {
   const voiceAnalysisResult = document.getElementById("voiceAnalysisResult");
   const anFilename = document.getElementById("anFilename");
   const anDuration = document.getElementById("anDuration");
-  const anSr = document.getElementById("anSr");
-  const anChannels = document.getElementById("anChannels");
-  const anVAD = document.getElementById("anVAD");
   const anRecommendation = document.getElementById("anRecommendation");
 
   const stylesContainer = document.getElementById("stylesContainer");
+  const mobileStyleSelect = document.getElementById("mobileStyleSelect");
+  const uploadTargetStyleSelect = document.getElementById("uploadTargetStyleSelect");
+  const cutterTargetStyleSelect = document.getElementById("cutterTargetStyleSelect");
+  const activeStyleIndicator = document.getElementById("activeStyleIndicator");
+  const btnRenameCurrentStyle = document.getElementById("btnRenameCurrentStyle");
   const btnOpenAddStyle = document.getElementById("btnOpenAddStyle");
   const btnCloseAddStyle = document.getElementById("btnCloseAddStyle");
   const addStyleForm = document.getElementById("addStyleForm");
   const btnSaveNewStyle = document.getElementById("btnSaveNewStyle");
 
+  const btnVoiceMale = document.getElementById("btnVoiceMale");
+  const btnVoiceFemale = document.getElementById("btnVoiceFemale");
+  const maleStylesSection = document.getElementById("maleStylesSection");
+  const femaleVoiceNotice = document.getElementById("femaleVoiceNotice");
+
   let activeStyle = "neutral";
+  let selectedGender = "male";
   let currentAudioFile = null;
   let timerInterval = null;
+  let loadedStylesList = [];
 
-  // 1. Check System Health & Fetch Styles
+  // =========================================================================
+  // 1. Check Backend Health & Fetch Styles
+  // =========================================================================
   async function checkHealthAndLoadStyles() {
     try {
-      const res = await fetch(`${API_BASE}/health`);
+      const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(4000) });
       if (res.ok) {
         const data = await res.json();
-        healthText.textContent = `Online • ${data.selected_engine.toUpperCase()}`;
-        healthBadge.className = "flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+        if (backendStatusText) backendStatusText.textContent = `Online • ${data.selected_engine.toUpperCase()}`;
+        if (backendPulse) backendPulse.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
       } else {
         throw new Error("Offline");
       }
     } catch (e) {
-      healthText.textContent = "Chưa kết nối Backend";
-      healthBadge.className = "flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20";
+      if (backendStatusText) backendStatusText.textContent = "Chưa kết nối AI";
+      if (backendPulse) backendPulse.className = "w-2 h-2 rounded-full bg-amber-400";
     }
 
     loadStyles();
@@ -73,6 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch(`${API_BASE}/styles`);
       if (res.ok) {
         const styles = await res.json();
+        loadedStylesList = styles;
         renderStyles(styles);
       }
     } catch (e) {
@@ -81,59 +93,311 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderStyles(styles) {
-    stylesContainer.innerHTML = "";
-    styles.forEach((st) => {
-      const isActive = st.style_id === activeStyle;
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.setAttribute("data-style", st.style_id);
-      btn.className = `style-card text-left p-4 rounded-xl border transition relative ${
-        isActive
-          ? "border-indigo-500/40 bg-indigo-500/10 active"
-          : "border-slate-800 bg-slate-900/50 hover:border-slate-700"
-      }`;
+    if (!styles || styles.length === 0) return;
 
-      let icon = "fa-microphone-lines";
-      if (st.style_id === "serious") icon = "fa-landmark";
-      if (st.style_id === "storytelling") icon = "fa-book-open-reader";
-      if (st.style_id.includes("lali")) icon = "fa-wand-magic-sparkles";
-
-      btn.innerHTML = `
-        <div class="flex items-center justify-between mb-1">
-          <span class="font-semibold text-sm ${isActive ? 'text-indigo-300' : 'text-slate-300'} flex items-center gap-1.5 truncate">
-            <i class="fa-solid ${icon} text-xs"></i> ${st.name}
-          </span>
-          <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 ${isActive ? 'bg-indigo-500/20 text-indigo-300' : 'text-slate-400'} font-mono">${st.speed}x</span>
-        </div>
-        <p class="text-xs text-slate-400 line-clamp-2">${st.description}</p>
-      `;
-
-      btn.addEventListener("click", () => {
-        activeStyle = st.style_id;
-        document.querySelectorAll(".style-card").forEach(b => {
-          b.classList.remove("border-indigo-500/40", "bg-indigo-500/10", "active");
-          b.classList.add("border-slate-800", "bg-slate-900/50");
-        });
-        btn.classList.remove("border-slate-800", "bg-slate-900/50");
-        btn.classList.add("border-indigo-500/40", "bg-indigo-500/10", "active");
-        
-        const badge = document.getElementById("targetStyleBadge");
-        if (badge) badge.textContent = `Gắn cho: ${activeStyle}`;
+    // 1. Populate Mobile Dropdown Selector
+    if (mobileStyleSelect) {
+      mobileStyleSelect.innerHTML = "";
+      styles.forEach(st => {
+        const opt = document.createElement("option");
+        opt.value = st.style_id;
+        opt.textContent = `${st.name} (${st.speed}x)`;
+        if (st.style_id === activeStyle) opt.selected = true;
+        mobileStyleSelect.appendChild(opt);
       });
+    }
 
-      stylesContainer.appendChild(btn);
+    // 2. Populate Upload & Cutter Target Style Dropdowns
+    if (uploadTargetStyleSelect) {
+      uploadTargetStyleSelect.innerHTML = "";
+      styles.forEach(st => {
+        const opt = document.createElement("option");
+        opt.value = st.style_id;
+        opt.textContent = st.name;
+        if (st.style_id === activeStyle) opt.selected = true;
+        uploadTargetStyleSelect.appendChild(opt);
+      });
+    }
+
+    if (cutterTargetStyleSelect) {
+      cutterTargetStyleSelect.innerHTML = "";
+      styles.forEach(st => {
+        const opt = document.createElement("option");
+        opt.value = st.style_id;
+        opt.textContent = st.name;
+        if (st.style_id === activeStyle) opt.selected = true;
+        cutterTargetStyleSelect.appendChild(opt);
+      });
+    }
+
+    // 3. Render Touch-friendly Grid Cards
+    if (stylesContainer) {
+      stylesContainer.innerHTML = "";
+      styles.forEach((st) => {
+        const isActive = st.style_id === activeStyle;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.setAttribute("data-style", st.style_id);
+        btn.className = `style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer ${
+          isActive
+            ? "border-indigo-500/60 bg-indigo-500/15 shadow-md shadow-indigo-500/10 active ring-1 ring-indigo-500/40"
+            : "border-slate-800 bg-slate-900/60 hover:border-slate-700"
+        }`;
+
+        let icon = "fa-microphone-lines";
+        if (st.style_id === "loc_dinh_ky") icon = "fa-masks-theater text-amber-400";
+        else if (st.style_id === "serious") icon = "fa-landmark";
+        else if (st.style_id === "storytelling") icon = "fa-book-open-reader";
+        else if (st.style_id.includes("lali")) icon = "fa-wand-magic-sparkles";
+
+        btn.innerHTML = `
+          <div class="flex items-center justify-between mb-1">
+            <span class="font-bold text-xs sm:text-sm ${isActive ? 'text-indigo-300' : 'text-slate-200'} flex items-center gap-1.5 truncate">
+              <i class="fa-solid ${icon} text-xs"></i> ${st.name}
+            </span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 ${isActive ? 'bg-indigo-500/30 text-indigo-200 font-bold' : 'text-slate-400'} font-mono">${st.speed}x</span>
+          </div>
+          <p class="text-[11px] text-slate-400 line-clamp-2 leading-tight">${st.description || 'Phong cách giọng nói'}</p>
+        `;
+
+        btn.addEventListener("click", () => {
+          setActiveStyle(st.style_id);
+        });
+
+        stylesContainer.appendChild(btn);
+      });
+    }
+
+    updateActiveStyleUI();
+  }
+
+  function setActiveStyle(styleId) {
+    activeStyle = styleId;
+    updateActiveStyleUI();
+  }
+
+  function updateActiveStyleUI() {
+    const curObj = loadedStylesList.find(s => s.style_id === activeStyle);
+    const styleName = curObj ? curObj.name : activeStyle;
+
+    if (activeStyleIndicator) {
+      activeStyleIndicator.textContent = `Đang chọn: ${styleName}`;
+    }
+
+    if (mobileStyleSelect && mobileStyleSelect.value !== activeStyle) {
+      mobileStyleSelect.value = activeStyle;
+    }
+
+    if (uploadTargetStyleSelect) {
+      uploadTargetStyleSelect.value = activeStyle;
+    }
+
+    if (cutterTargetStyleSelect) {
+      cutterTargetStyleSelect.value = activeStyle;
+    }
+
+    const badge = document.getElementById("targetStyleBadge");
+    if (badge) badge.textContent = `Gắn cho: ${styleName}`;
+
+    // Update card active classes
+    document.querySelectorAll(".style-card").forEach(b => {
+      const isCardActive = b.getAttribute("data-style") === activeStyle;
+      if (isCardActive) {
+        b.className = "style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer border-indigo-500/60 bg-indigo-500/15 shadow-md shadow-indigo-500/10 active ring-1 ring-indigo-500/40";
+        const titleSpan = b.querySelector("span.font-bold");
+        if (titleSpan) titleSpan.className = "font-bold text-xs sm:text-sm text-indigo-300 flex items-center gap-1.5 truncate";
+      } else {
+        b.className = "style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer border-slate-800 bg-slate-900/60 hover:border-slate-700";
+        const titleSpan = b.querySelector("span.font-bold");
+        if (titleSpan) titleSpan.className = "font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-1.5 truncate";
+      }
+    });
+  }
+
+  if (mobileStyleSelect) {
+    mobileStyleSelect.addEventListener("change", (e) => {
+      setActiveStyle(e.target.value);
+    });
+  }
+
+  if (uploadTargetStyleSelect) {
+    uploadTargetStyleSelect.addEventListener("change", (e) => {
+      const badge = document.getElementById("targetStyleBadge");
+      if (badge) {
+        const curObj = loadedStylesList.find(s => s.style_id === e.target.value);
+        badge.textContent = `Gắn cho: ${curObj ? curObj.name : e.target.value}`;
+      }
+    });
+  }
+
+  // =========================================================================
+  // 2. Gender Tabs (Male & Female)
+  // =========================================================================
+  if (btnVoiceMale && btnVoiceFemale) {
+    btnVoiceMale.addEventListener("click", () => {
+      selectedGender = "male";
+      btnVoiceMale.className = "py-2.5 px-3 rounded-xl bg-indigo-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-indigo-500 shadow-md shadow-indigo-600/20 transition active:scale-95 cursor-pointer";
+      btnVoiceFemale.className = "py-2.5 px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-medium text-xs sm:text-sm flex items-center justify-center gap-2 border border-slate-800 transition active:scale-95 cursor-pointer";
+      if (maleStylesSection) maleStylesSection.classList.remove("hidden");
+      if (femaleVoiceNotice) femaleVoiceNotice.classList.add("hidden");
+    });
+
+    btnVoiceFemale.addEventListener("click", () => {
+      selectedGender = "female";
+      btnVoiceFemale.className = "py-2.5 px-3 rounded-xl bg-indigo-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-indigo-500 shadow-md shadow-indigo-600/20 transition active:scale-95 cursor-pointer";
+      btnVoiceMale.className = "py-2.5 px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-medium text-xs sm:text-sm flex items-center justify-center gap-2 border border-slate-800 transition active:scale-95 cursor-pointer";
+      if (maleStylesSection) maleStylesSection.classList.add("hidden");
+      if (femaleVoiceNotice) femaleVoiceNotice.classList.remove("hidden");
+    });
+  }
+
+  // =========================================================================
+  // 3. Rename Style Feature
+  // =========================================================================
+  const renameStyleModal = document.getElementById("renameStyleModal");
+  const btnCloseRenameModal = document.getElementById("btnCloseRenameModal");
+  const btnCancelRename = document.getElementById("btnCancelRename");
+  const btnConfirmRename = document.getElementById("btnConfirmRename");
+  const renameStyleIdInput = document.getElementById("renameStyleIdInput");
+  const renameStyleNameInput = document.getElementById("renameStyleNameInput");
+
+  if (btnRenameCurrentStyle) {
+    btnRenameCurrentStyle.addEventListener("click", () => {
+      const curObj = loadedStylesList.find(s => s.style_id === activeStyle);
+      if (renameStyleIdInput) renameStyleIdInput.value = activeStyle;
+      if (renameStyleNameInput) renameStyleNameInput.value = curObj ? curObj.name : activeStyle;
+      if (renameStyleModal) renameStyleModal.classList.remove("hidden");
+    });
+  }
+
+  function closeRenameModal() {
+    if (renameStyleModal) renameStyleModal.classList.add("hidden");
+  }
+
+  if (btnCloseRenameModal) btnCloseRenameModal.addEventListener("click", closeRenameModal);
+  if (btnCancelRename) btnCancelRename.addEventListener("click", closeRenameModal);
+
+  if (btnConfirmRename) {
+    btnConfirmRename.addEventListener("click", async () => {
+      const newName = renameStyleNameInput.value.trim();
+      if (!newName) {
+        alert("Vui lòng nhập tên mới cho Style!");
+        return;
+      }
+
+      btnConfirmRename.disabled = true;
+      btnConfirmRename.textContent = "Đang lưu...";
+
+      try {
+        const res = await fetch(`${API_BASE}/styles/rename`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            style_id: activeStyle,
+            new_name: newName
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: "Lỗi đổi tên style" }));
+          throw new Error(err.detail || "Lỗi đổi tên style");
+        }
+
+        const data = await res.json();
+        closeRenameModal();
+        await loadStyles();
+        alert(`🎉 ${data.message}`);
+      } catch (e) {
+        alert(`Lỗi: ${e.message}`);
+      } finally {
+        btnConfirmRename.disabled = false;
+        btnConfirmRename.textContent = "Lưu Tên Mới";
+      }
+    });
+  }
+
+  // =========================================================================
+  // 4. Server Connection Settings (Backend URL for Vercel/Local)
+  // =========================================================================
+  const serverSettingsModal = document.getElementById("serverSettingsModal");
+  const btnCloseServerModal = document.getElementById("btnCloseServerModal");
+  const serverBackendUrlInput = document.getElementById("serverBackendUrlInput");
+  const btnTestServerConnection = document.getElementById("btnTestServerConnection");
+  const btnSaveServerUrl = document.getElementById("btnSaveServerUrl");
+  const btnResetServerDefault = document.getElementById("btnResetServerDefault");
+  const serverTestResult = document.getElementById("serverTestResult");
+
+  window.openServerSettings = function() {
+    if (serverBackendUrlInput) serverBackendUrlInput.value = API_BASE;
+    if (serverTestResult) serverTestResult.textContent = "Chưa kiểm tra kết nối";
+    if (serverSettingsModal) serverSettingsModal.classList.remove("hidden");
+  };
+
+  function closeServerModal() {
+    if (serverSettingsModal) serverSettingsModal.classList.add("hidden");
+  }
+
+  if (btnCloseServerModal) btnCloseServerModal.addEventListener("click", closeServerModal);
+
+  if (btnTestServerConnection) {
+    btnTestServerConnection.addEventListener("click", async () => {
+      const url = serverBackendUrlInput.value.trim().replace(/\/+$/, "");
+      if (!url) return;
+      serverTestResult.textContent = "Đang kiểm tra kết nối...";
+      serverTestResult.className = "text-[11px] text-indigo-400";
+
+      try {
+        const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(4000) });
+        if (res.ok) {
+          const d = await res.json();
+          serverTestResult.textContent = `✅ Kết nối thành công (${d.selected_engine})`;
+          serverTestResult.className = "text-[11px] text-emerald-400 font-semibold";
+        } else {
+          throw new Error("HTTP " + res.status);
+        }
+      } catch (e) {
+        serverTestResult.textContent = `❌ Không thể kết nối: ${e.message}`;
+        serverTestResult.className = "text-[11px] text-rose-400 font-semibold";
+      }
+    });
+  }
+
+  if (btnSaveServerUrl) {
+    btnSaveServerUrl.addEventListener("click", () => {
+      const url = serverBackendUrlInput.value.trim().replace(/\/+$/, "");
+      if (!url) return;
+      localStorage.setItem("lapque_custom_backend_url", url);
+      API_BASE = url;
+      closeServerModal();
+      checkHealthAndLoadStyles();
+      alert(`Đã lưu Backend URL: ${url}`);
+    });
+  }
+
+  if (btnResetServerDefault) {
+    btnResetServerDefault.addEventListener("click", () => {
+      localStorage.removeItem("lapque_custom_backend_url");
+      API_BASE = isVercel ? "http://127.0.0.1:8000" : window.location.origin;
+      if (serverBackendUrlInput) serverBackendUrlInput.value = API_BASE;
+      closeServerModal();
+      checkHealthAndLoadStyles();
+      alert("Đã khôi phục địa chỉ mặc định!");
     });
   }
 
   checkHealthAndLoadStyles();
 
-  // 2. Custom Style Toggle & Creation with Multiple MP3 Files
-  btnOpenAddStyle.addEventListener("click", () => {
-    addStyleForm.classList.toggle("hidden");
-  });
-  btnCloseAddStyle.addEventListener("click", () => {
-    addStyleForm.classList.add("hidden");
-  });
+  // 5. Custom Style Toggle & Creation with Multiple MP3 Files
+  if (btnOpenAddStyle) {
+    btnOpenAddStyle.addEventListener("click", () => {
+      addStyleForm.classList.toggle("hidden");
+    });
+  }
+  if (btnCloseAddStyle) {
+    btnCloseAddStyle.addEventListener("click", () => {
+      addStyleForm.classList.add("hidden");
+    });
+  }
 
   const btnSaveNewStyleText = document.getElementById("btnSaveNewStyleText");
   const newStyleFiles = document.getElementById("newStyleFiles");
@@ -209,73 +473,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 3. Character & Word Counter
-  textInput.addEventListener("input", () => {
-    const len = textInput.value.length;
-    charCount.textContent = len.toLocaleString("vi-VN");
-    
-    const words = textInput.value.trim() ? textInput.value.trim().split(/\s+/).length : 0;
-    const sentences = textInput.value.trim() ? textInput.value.split(/[\.\?!]+/).filter(Boolean).length : 0;
-    wordCountText.textContent = `${words} từ • ~${sentences} câu`;
-
-    if (len > 4500) {
-      charCount.className = "font-bold text-amber-400";
-    } else {
-      charCount.className = "font-bold text-slate-200";
-    }
-  });
-
-  // 4. Sample Text Buttons
-  document.getElementById("btnSample1").addEventListener("click", () => {
-    textInput.value = "Theo báo cáo mới nhất ngày 24/08/2026, PGS.TS Nguyễn Văn A tại TP.HCM đã công bố dự án công nghệ chuyển đổi văn bản tiếng Việt thành giọng nói tự nhiên với chi phí 0 đồng. Dự án giúp tăng trưởng 18.5% hiệu suất sản xuất nội dung số.";
-    textInput.dispatchEvent(new Event("input"));
-  });
-
-  document.getElementById("btnSample2").addEventListener("click", () => {
-    textInput.value = "Mùa thu Hà Nội luôn mang một vẻ đẹp dịu dàng và trầm mặc rất riêng. Khi những cơn gió heo may đầu mùa thổi qua từng góc phố cổ, mùi hoa sữa thoang thoảng quyện trong không gian se lạnh khiến lòng người bâng khuâng khó tả. Những hàng cây cơm nguội vàng soi bóng xuống mặt nước Hồ Gươm phẳng lặng, tạo nên bức tranh thiên nhiên tuyệt mỹ khó quên.";
-    textInput.dispatchEvent(new Event("input"));
-  });
-
-  document.getElementById("btnClear").addEventListener("click", () => {
-    textInput.value = "";
-    textInput.dispatchEvent(new Event("input"));
-  });
-
-  let selectedGender = "male";
-  let selectedCoreMode = "neural";
-  const btnVoiceMale = document.getElementById("btnVoiceMale");
-  const btnVoiceFemale = document.getElementById("btnVoiceFemale");
-  const btnCoreNeural = document.getElementById("btnCoreNeural");
-  const btnCoreParametric = document.getElementById("btnCoreParametric");
-  const colabGpuUrl = document.getElementById("colabGpuUrl");
-
-  if (btnCoreNeural && btnCoreParametric) {
-    btnCoreNeural.addEventListener("click", () => {
-      selectedCoreMode = "neural";
-      btnCoreNeural.className = "px-2.5 py-1 rounded bg-indigo-600 text-white font-medium text-[11px] shadow-sm";
-      btnCoreParametric.className = "px-2.5 py-1 rounded bg-slate-800 text-slate-400 font-medium text-[11px]";
-    });
-    btnCoreParametric.addEventListener("click", () => {
-      selectedCoreMode = "parametric";
-      btnCoreParametric.className = "px-2.5 py-1 rounded bg-indigo-600 text-white font-medium text-[11px] shadow-sm";
-      btnCoreNeural.className = "px-2.5 py-1 rounded bg-slate-800 text-slate-400 font-medium text-[11px]";
+  // 6. Character & Word Counter (No Length Limits)
+  if (textInput) {
+    textInput.addEventListener("input", () => {
+      const len = textInput.value.length;
+      if (charCount) charCount.textContent = len.toLocaleString("vi-VN");
+      
+      const words = textInput.value.trim() ? textInput.value.trim().split(/\s+/).length : 0;
+      const sentences = textInput.value.trim() ? textInput.value.split(/[\.\?!]+/).filter(Boolean).length : 0;
+      if (wordCountText) wordCountText.textContent = `${words} từ • ~${sentences} đoạn`;
     });
   }
 
-  if (btnVoiceMale && btnVoiceFemale) {
-    btnVoiceMale.addEventListener("click", () => {
-      selectedGender = "male";
-      btnVoiceMale.className = "px-2 py-0.5 rounded bg-indigo-600 text-white font-medium";
-      btnVoiceFemale.className = "px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-medium";
-    });
-    btnVoiceFemale.addEventListener("click", () => {
-      selectedGender = "female";
-      btnVoiceFemale.className = "px-2 py-0.5 rounded bg-indigo-600 text-white font-medium";
-      btnVoiceMale.className = "px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-medium";
+  const btnClear = document.getElementById("btnClear");
+  if (btnClear) {
+    btnClear.addEventListener("click", () => {
+      if (textInput) {
+        textInput.value = "";
+        textInput.dispatchEvent(new Event("input"));
+      }
     });
   }
 
-  // 5. Synthesis Action
+  // 7. Synthesis Action
   btnGenerate.addEventListener("click", async () => {
     const text = textInput.value.trim();
     if (!text) {
@@ -298,10 +518,9 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       setTimeout(() => {
         progressBar.style.width = "50%";
-        progressStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân đoạn & biến đổi sóng âm V7...';
+        progressStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân đoạn & bóc tách âm phổ nơ-ron...';
       }, 400);
 
-      const gpuUrl = colabGpuUrl ? colabGpuUrl.value.trim() : "";
       const response = await fetch(`${API_BASE}/tts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -309,13 +528,12 @@ document.addEventListener("DOMContentLoaded", () => {
           text: text,
           style_id: activeStyle,
           voice_gender: selectedGender,
-          core_mode: selectedCoreMode,
-          gpu_server_url: gpuUrl || undefined
+          core_mode: "neural"
         })
       });
 
       if (!response.ok) {
-        const err = await response.json();
+        const err = await response.json().catch(() => ({ detail: "Không thể tổng hợp âm thanh." }));
         throw new Error(err.detail || "Không thể tổng hợp âm thanh.");
       }
 
@@ -385,13 +603,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    const targetStyle = (uploadTargetStyleSelect && uploadTargetStyleSelect.value) || activeStyle;
+    const curObj = loadedStylesList.find(s => s.style_id === targetStyle);
+    const targetStyleName = curObj ? curObj.name : targetStyle;
+
     const formData = new FormData();
-    formData.append("style_id", activeStyle);
+    formData.append("style_id", targetStyle);
     for (let i = 0; i < files.length; i++) {
       formData.append("files", files[i]);
     }
 
-    anFilename.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-indigo-400"></i> Đang bóc tách ${files.length} file MP3...`;
+    anFilename.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-indigo-400"></i> Đang bóc tách ${files.length} file MP3 cho style ${targetStyleName}...`;
     anDuration.textContent = "Đang phân tích phổ...";
     voiceAnalysisResult.classList.remove("hidden");
 
@@ -421,16 +643,16 @@ document.addEventListener("DOMContentLoaded", () => {
         anFormants.textContent = `F1: ${prof.formants.F1_hz}Hz | F2: ${prof.formants.F2_hz}Hz | F3: ${prof.formants.F3_hz}Hz | F4: ${prof.formants.F4_hz}Hz`;
       }
 
-      anRecommendation.textContent = `✅ Đã bóc tách 2048 dải tần Fourier & lưu vào Style '${activeStyle}'!`;
+      anRecommendation.textContent = `✅ Đã nạp thành công vào Style '${targetStyleName}'!`;
       anRecommendation.className = "text-emerald-400 font-medium pt-1 text-center";
 
       if (refAudioPlayer) {
-        refAudioPlayer.src = `${API_BASE}/voice_ref/${activeStyle}/reference.wav?t=${Date.now()}`;
+        refAudioPlayer.src = `${API_BASE}/voice_ref/${targetStyle}/reference.wav?t=${Date.now()}`;
         refAudioPlayer.load();
       }
 
       await loadStyles();
-      alert(`🎉 Bóc tách thành công ${files.length} file âm thanh mẫu cho Style '${activeStyle}'!\n- Tổng thời lượng: ${prof.total_duration_seconds}s\n- Dải tần số Fourier: 1025 bins\n- Vector Faiss: ${prof.faiss_timbre_vectors}`);
+      alert(`🎉 Bóc tách thành công ${files.length} file âm thanh mẫu nạp vào Style '${targetStyleName}'!\n- Tổng thời lượng: ${prof.total_duration_seconds}s\n- Vector Faiss: ${prof.faiss_timbre_vectors}`);
     } catch (err) {
       anFilename.textContent = "Lỗi bóc tách";
       anDuration.textContent = "Thất bại";
@@ -873,18 +1095,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const targetType = document.querySelector("input[name='cutterTarget']:checked").value;
-    let targetStyleId = activeStyle;
-    let targetStyleName = "";
-
-    if (targetType === "new") {
-      targetStyleId = document.getElementById("cutterNewStyleId").value.trim().toLowerCase().replace(/\s+/g, "_");
-      targetStyleName = document.getElementById("cutterNewStyleName").value.trim();
-      if (!targetStyleId || !targetStyleName) {
-        alert("Vui lòng nhập Mã Style và Tên hiển thị cho Style mới!");
-        return;
-      }
-    }
+    const targetStyleId = (cutterTargetStyleSelect && cutterTargetStyleSelect.value) || activeStyle;
+    const customSliceName = (document.getElementById("cutterCustomSliceName") ? document.getElementById("cutterCustomSliceName").value.trim() : "");
 
     btnExecuteSliceAndProfile.disabled = true;
     if (btnExecuteSliceText) btnExecuteSliceText.textContent = "Đang cắt chính xác và bóc tách phổ Fourier...";
@@ -894,7 +1106,7 @@ document.addEventListener("DOMContentLoaded", () => {
     formData.append("start_sec", cutterStartSec);
     formData.append("end_sec", cutterEndSec);
     formData.append("style_id", targetStyleId);
-    if (targetStyleName) formData.append("style_name", targetStyleName);
+    if (customSliceName) formData.append("custom_slice_name", customSliceName);
 
     try {
       const res = await fetch(`${API_BASE}/audio/slice-and-profile`, {
@@ -918,7 +1130,7 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(`Lỗi: ${e.message}`);
     } finally {
       btnExecuteSliceAndProfile.disabled = false;
-      if (btnExecuteSliceText) btnExecuteSliceText.textContent = "Cắt & Bóc Tách Phổ Nạp Vào Style Ngay";
+      if (btnExecuteSliceText) btnExecuteSliceText.textContent = "Cắt & Nạp Vào Style Ngay";
     }
   });
 

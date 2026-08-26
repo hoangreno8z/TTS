@@ -2,8 +2,8 @@
 <html lang="vi" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LAPQUE Personal Vietnamese TTS Studio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HUY HOÀNG - Studio Lồng Tiếng AI Tiếng Việt</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -26,163 +26,176 @@
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; }
-    .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .glass-card { background: rgba(30, 41, 59, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 4px; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
 
   <!-- Header -->
-  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <i class="fa-solid fa-waveform-lines text-white text-lg"></i>
+  <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur sticky top-0 z-50 shadow-sm">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 h-16 flex items-center justify-between gap-2">
+      
+      <!-- Brand Logo & Contact -->
+      <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+          <i class="fa-solid fa-microphone-lines text-white text-base sm:text-lg"></i>
         </div>
-        <div>
-          <h1 class="font-bold text-lg leading-tight tracking-tight flex items-center gap-2">
-            LAPQUE <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">Personal TTS</span>
+        <div class="truncate">
+          <h1 class="font-extrabold text-sm sm:text-base text-slate-100 leading-tight tracking-tight flex items-center gap-1.5">
+            HUY HOÀNG
           </h1>
-          <p class="text-xs text-slate-400">Tiếng Việt • 5.000 ký tự • F5-TTS AI Core • 0đ</p>
+          <p class="text-[11px] sm:text-xs text-indigo-400 font-bold tracking-wide flex items-center gap-1">
+            <i class="fa-solid fa-phone text-[9px]"></i> 0933116860
+          </p>
         </div>
       </div>
       
-      <!-- Action Tools & System Health Badge -->
-      <div class="flex items-center space-x-2.5">
-        <button id="btnOpenAutoTuneHeader" onclick="window.openAutoTuneModal && window.openAutoTuneModal()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-semibold text-xs shadow-md shadow-orange-500/20 flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
-          <i class="fa-solid fa-scale-balanced"></i> AI Giám Khảo
+      <!-- Action Tools (Slim, Compact Pill Buttons for Mobile & Desktop) -->
+      <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+        <button id="btnOpenAutoTuneHeader" onclick="window.openAutoTuneModal && window.openAutoTuneModal()" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-semibold text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-graduation-cap text-[11px]"></i> <span>Huấn Luyện</span>
         </button>
-        <button id="btnOpenCutterHeader" onclick="window.openCutterModal && window.openCutterModal()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-md shadow-indigo-500/20 flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
-          <i class="fa-solid fa-scissors"></i> Cắt MP3
+        
+        <button id="btnOpenCutterHeader" onclick="window.openCutterModal && window.openCutterModal()" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-indigo-100 border border-indigo-500/30 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-scissors text-[11px]"></i> <span>Cắt MP3</span>
         </button>
-        <div id="healthBadge" class="flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="healthText">Đang kiểm tra...</span>
-        </div>
+        
+        <button id="btnServerConfigHeader" onclick="window.openServerSettings && window.openServerSettings()" class="flex items-center space-x-1 px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-slate-800/90 text-slate-300 border border-slate-700 hover:border-indigo-500/50 cursor-pointer transition active:scale-95" title="Bấm để kiểm tra / đổi địa chỉ máy chủ Backend AI">
+          <span id="backendPulse" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="backendStatusText" class="hidden sm:inline">Máy chủ AI</span>
+        </button>
       </div>
     </div>
   </header>
 
   <!-- Main Container -->
-  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+  <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-4 py-4 sm:py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
     
     <!-- Left Column: Input & Synthesis (7 cols) -->
-    <div class="lg:col-span-7 space-y-6">
+    <div class="lg:col-span-7 space-y-5">
       
       <!-- Text Area Card -->
-      <div class="glass-card rounded-2xl p-6 shadow-xl space-y-4">
+      <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-xl space-y-3">
         <div class="flex items-center justify-between">
           <label for="textInput" class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-            <i class="fa-solid fa-file-lines text-indigo-400"></i> Văn Bản Tiếng Việt
+            <i class="fa-solid fa-file-lines text-indigo-400"></i> Nhập Văn Bản Tiếng Việt
           </label>
-          <div class="flex items-center space-x-2 text-xs">
-            <button id="btnSample1" class="text-indigo-400 hover:text-indigo-300 transition">Mẫu Tin Tức</button>
-            <span class="text-slate-600">•</span>
-            <button id="btnSample2" class="text-indigo-400 hover:text-indigo-300 transition">Mẫu Kể Chuyện</button>
-            <span class="text-slate-600">•</span>
-            <button id="btnClear" class="text-rose-400 hover:text-rose-300 transition">Xóa</button>
-          </div>
+          <button id="btnClear" class="text-xs text-rose-400 hover:text-rose-300 font-medium flex items-center gap-1 transition cursor-pointer">
+            <i class="fa-solid fa-eraser text-[10px]"></i> Xóa
+          </button>
         </div>
 
         <div class="relative">
           <textarea
             id="textInput"
-            rows="9"
-            maxlength="5000"
-            placeholder="Nhập hoặc dán văn bản tiếng Việt vào đây (tối đa 5.000 ký tự). Hệ thống sẽ tự động chuẩn hóa ngày tháng, số đếm, tiền tệ và tách câu an toàn..."
-            class="w-full bg-slate-900/90 text-slate-100 placeholder-slate-500 border border-slate-800 rounded-xl p-4 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition resize-none"
+            rows="7"
+            placeholder="Nhập hoặc dán văn bản tiếng Việt vào đây (không giới hạn độ dài). Hệ thống tự động phân đoạn thông minh và bảo toàn thanh điệu chuẩn xác..."
+            class="w-full bg-slate-900/90 text-slate-100 placeholder-slate-500 border border-slate-800 rounded-xl p-3.5 sm:p-4 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition resize-y min-h-[150px]"
           ></textarea>
           
-          <!-- Live Character Counter -->
+          <!-- Live Character & Word Counter -->
           <div class="flex items-center justify-between text-xs text-slate-400 mt-2 px-1">
             <div id="wordCountText">0 từ • ~0 đoạn</div>
-            <div id="charCounter" class="font-mono">
-              <span id="charCount" class="font-bold text-slate-200">0</span> / 5.000 ký tự
+            <div id="charCounter" class="font-mono text-indigo-300 font-semibold">
+              <span id="charCount" class="text-slate-100 font-bold">0</span> ký tự
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Style Selection Card -->
-      <div class="glass-card rounded-2xl p-6 shadow-xl space-y-4">
-        <div class="flex items-center justify-between">
+      <!-- Voice & Style Selector Card (Above Synthesis Button) -->
+      <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 border-indigo-500/20">
+        <div class="flex items-center justify-between flex-wrap gap-2">
           <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-            <i class="fa-solid fa-masks-theater text-indigo-400"></i> Chọn Phong Cách Giọng Đọc (Style)
+            <i class="fa-solid fa-masks-theater text-indigo-400"></i> Chọn Giọng & Phong Cách Đọc
           </h2>
-          <button id="btnOpenAddStyle" class="text-xs text-indigo-400 hover:text-indigo-300 transition flex items-center gap-1 font-medium">
-            <i class="fa-solid fa-plus text-[10px]"></i> Thêm Style Mới
+          <div class="flex items-center space-x-2">
+            <button id="btnRenameCurrentStyle" type="button" class="text-xs text-amber-400 hover:text-amber-300 transition flex items-center gap-1 font-medium bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 active:scale-95 cursor-pointer" title="Đổi tên hiển thị của Style đang chọn">
+              <i class="fa-solid fa-pen-to-square text-[10px]"></i> Sửa Tên
+            </button>
+            <button id="btnOpenAddStyle" class="text-xs text-indigo-400 hover:text-indigo-300 transition flex items-center gap-1 font-medium bg-indigo-500/10 px-2 py-1 rounded-lg border border-indigo-500/20 active:scale-95 cursor-pointer">
+              <i class="fa-solid fa-plus text-[10px]"></i> Thêm Mới
+            </button>
+          </div>
+        </div>
+
+        <!-- Gender & Voice Category Tabs -->
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" id="btnVoiceMale" class="py-2.5 px-3 rounded-xl bg-indigo-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-indigo-500 shadow-md shadow-indigo-600/20 transition active:scale-95 cursor-pointer">
+            <i class="fa-solid fa-user-tie"></i>
+            <span>👨 Giọng Nam & Nhân Vật</span>
+          </button>
+          <button type="button" id="btnVoiceFemale" class="py-2.5 px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-medium text-xs sm:text-sm flex items-center justify-center gap-2 border border-slate-800 transition active:scale-95 cursor-pointer">
+            <i class="fa-solid fa-user"></i>
+            <span>👩 Giọng Nữ (Hoài My)</span>
           </button>
         </div>
-        
-        <!-- Dynamic Styles Container -->
-        <div id="stylesContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <!-- Rendered via app.js -->
-        </div>
 
-        <!-- Dual-Core V7 Engine Selector & Colab RVC Neural Bridge -->
-        <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 space-y-2 text-xs">
-          <div class="flex items-center justify-between">
-            <span class="text-slate-300 font-medium flex items-center gap-1.5">
-              <i class="fa-solid fa-microchip text-indigo-400"></i> Bộ Xử Lý Giọng Đọc
-            </span>
-            <div class="flex items-center space-x-1">
-              <button type="button" id="btnVoiceMale" class="px-2.5 py-1 rounded bg-indigo-600/90 text-white font-medium text-[11px]">👨 Nam</button>
-              <button type="button" id="btnVoiceFemale" class="px-2.5 py-1 rounded bg-slate-800 text-slate-400 font-medium text-[11px]">👩 Nữ</button>
-            </div>
+        <!-- Male Styles Section with Dropdown & Touch-friendly Cards -->
+        <div id="maleStylesSection" class="space-y-2.5">
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span>Danh sách phong cách giọng Nam:</span>
+            <span id="activeStyleIndicator" class="text-indigo-300 font-semibold font-mono truncate max-w-[200px]">Đang chọn: Lộc Đỉnh Ký</span>
           </div>
-          
-          <!-- Colab RVC v2 Neural Voice Cloning Bridge -->
-          <div class="pt-1 border-t border-slate-800/60">
-            <details class="cursor-pointer" open>
-              <summary class="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1">
-                <i class="fa-solid fa-brain"></i> Kết nối Google Colab RVC GPU (Mô Phỏng 100% Giọng Mẫu Thật)
-              </summary>
-              <div class="mt-2 space-y-1 text-[11px] text-slate-400">
-                <input type="text" id="colabGpuUrl" placeholder="Dán link Cloudflare Tunnel từ Colab (vd: https://xxx.trycloudflare.com)" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-200 focus:border-indigo-500">
-                <p class="text-[10px] text-slate-500">
-                  ⚡ Mở <code class="text-indigo-300">notebooks/08_rvc_colab_api_server.py</code> trên Google Colab Free (GPU T4) để chạy suy luận RVC Neural Voice Conversion.
-                </p>
-              </div>
-            </details>
+
+          <!-- Quick Dropdown (Mobile-first fast selection) -->
+          <select id="mobileStyleSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm font-semibold text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition cursor-pointer">
+            <!-- Populated via JS -->
+          </select>
+
+          <!-- Grid Card Selector (Touch-friendly cards) -->
+          <div id="stylesContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+            <!-- Rendered via JS -->
           </div>
         </div>
 
-        <!-- Add Custom Style Form (Hidden by default) -->
-        <div id="addStyleForm" class="hidden bg-slate-900/90 rounded-xl p-4 border border-indigo-500/30 space-y-3 text-xs">
+        <!-- Female Voice Notice Section -->
+        <div id="femaleVoiceNotice" class="hidden bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-1">
+          <div class="font-semibold text-indigo-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i> Giọng Nữ Chuẩn (Hoài My Neural)
+          </div>
+          <p class="text-[11px] text-slate-400">Giọng đọc nữ truyền cảm, mượt mà, phù hợp kể chuyện, thuyết minh và tin tức.</p>
+        </div>
+
+        <!-- Add Custom Style Form (Collapsible) -->
+        <div id="addStyleForm" class="hidden bg-slate-900/95 rounded-xl p-4 border border-indigo-500/40 space-y-3 text-xs animate-in fade-in">
           <div class="font-semibold text-slate-200 flex items-center justify-between">
             <span class="flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> Tạo Phong Cách / Giọng Nhân Vật Mới</span>
-            <button id="btnCloseAddStyle" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+            <button id="btnCloseAddStyle" class="text-slate-500 hover:text-slate-300 text-sm p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
           </div>
-          <div class="grid grid-cols-2 gap-2">
-            <input type="text" id="newStyleId" placeholder="Mã style (vd: chau_tinh_tri, dora)" class="bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 focus:border-indigo-500">
-            <input type="text" id="newStyleName" placeholder="Tên hiển thị (vd: Châu Tinh Trì Vui Nhộn)" class="bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 focus:border-indigo-500">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input type="text" id="newStyleId" placeholder="Mã style viết liền (vd: dora_vn, ton_ngo_khong)" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:border-indigo-500 text-xs">
+            <input type="text" id="newStyleName" placeholder="Tên hiển thị (vd: Tôn Ngộ Không Vui Tính)" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:border-indigo-500 text-xs">
           </div>
-          <input type="text" id="newStyleDesc" placeholder="Mô tả phong cách (vd: Giọng lồng tiếng hài hước, dứt khoát)" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 focus:border-indigo-500">
+          <input type="text" id="newStyleDesc" placeholder="Mô tả phong cách (vd: Giọng đanh thép, lanh lợi, dứt khoát)" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:border-indigo-500 text-xs">
           
-          <div class="border border-dashed border-slate-800 rounded-lg p-2.5 bg-slate-950/60">
-            <label class="block text-slate-400 mb-1 text-[11px] font-medium">Tải lên các file MP3/WAV giọng mẫu của nhân vật (1 hoặc nhiều file):</label>
+          <div class="border border-dashed border-slate-800 rounded-lg p-3 bg-slate-950/60">
+            <label class="block text-slate-400 mb-1 text-[11px] font-medium">Tải lên các file MP3/WAV giọng mẫu của nhân vật:</label>
             <input type="file" id="newStyleFiles" multiple accept=".mp3,.wav,.m4a,.flac" class="text-[11px] text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
           </div>
 
-          <button id="btnSaveNewStyle" class="w-full py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20">
+          <button id="btnSaveNewStyle" class="w-full py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer">
             <i class="fa-solid fa-microchip"></i>
             <span id="btnSaveNewStyleText">Bóc Tách Phổ Fourier & Tạo Style</span>
           </button>
         </div>
       </div>
 
-      <!-- Action Button -->
+      <!-- Action Button (Prominent Primary CTA) -->
       <button
         id="btnGenerate"
-        class="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-base shadow-lg shadow-indigo-600/30 active:scale-[0.99] transition flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-base shadow-xl shadow-indigo-600/30 active:scale-[0.98] transition flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
-        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
         <span id="btnGenerateText">Tổng Hợp Giọng Nói</span>
       </button>
 
       <!-- Progress / Status Notification -->
-      <div id="progressBox" class="hidden glass-card rounded-2xl p-5 border-indigo-500/30 space-y-3">
+      <div id="progressBox" class="hidden glass-card rounded-2xl p-4 sm:p-5 border-indigo-500/30 space-y-3">
         <div class="flex items-center justify-between text-xs">
           <span id="progressStatus" class="font-medium text-indigo-400 flex items-center gap-2">
             <i class="fa-solid fa-spinner fa-spin"></i> Đang chuẩn hóa văn bản tiếng Việt...
@@ -254,27 +267,34 @@
       </div>
 
       <!-- Voice Reference Inspector & Uploader -->
-      <div class="glass-card rounded-2xl p-6 shadow-xl space-y-4">
+      <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-            <i class="fa-solid fa-waveform-lines text-indigo-400"></i> Bóc Tách Phổ & Nạp Mẫu MP3
+            <i class="fa-solid fa-waveform-lines text-indigo-400"></i> Nạp Mẫu MP3 Vào Style
           </h2>
-          <span id="targetStyleBadge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono">
+          <span id="targetStyleBadge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono truncate max-w-[150px]">
             Gắn cho: neutral
           </span>
         </div>
-        <p class="text-xs text-slate-400 leading-relaxed">
-          Tải lên 1 hoặc <b>nhiều file MP3/WAV</b> của nhân vật. Thuật toán sẽ tự động bóc tách 2048 dải tần Fourier, 4 đỉnh Formant ($F_1-F_4$), đường cong cao độ $F_0$, và đóng gói Faiss Index.
-        </p>
+
+        <!-- Style Target Selector for MP3 Upload -->
+        <div class="space-y-1 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+          <label class="block text-[11px] font-semibold text-slate-300">
+            <i class="fa-solid fa-tag text-indigo-400"></i> Chọn Style Để Bổ Sung Data Mẫu:
+          </label>
+          <select id="uploadTargetStyleSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs font-semibold text-indigo-300 focus:border-indigo-500 cursor-pointer">
+            <!-- Populated via JS -->
+          </select>
+        </div>
 
         <label class="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition bg-slate-900/30 group">
           <input type="file" id="voiceUpload" multiple accept=".wav,.mp3,.m4a,.flac" class="hidden">
           <i class="fa-solid fa-cloud-arrow-up text-xl text-slate-400 group-hover:text-indigo-400 mb-1 transition"></i>
-          <span class="text-xs font-medium text-slate-300 group-hover:text-white transition">Kéo thả hoặc Chọn nhiều file MP3 / WAV</span>
-          <span class="text-[10px] text-slate-500 mt-0.5">Tự động ghép nối, lọc tạp âm và bóc tách phổ</span>
+          <span class="text-xs font-medium text-slate-300 group-hover:text-white transition text-center">Kéo thả hoặc Chọn nhiều file MP3 / WAV</span>
+          <span class="text-[10px] text-slate-500 mt-0.5">Tự động nạp vào Style đã chọn ở trên</span>
         </label>
 
-        <button id="btnOpenCutterBox" onclick="window.openCutterModal && window.openCutterModal()" type="button" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600/30 to-violet-600/30 hover:from-indigo-600/40 hover:to-violet-600/40 text-indigo-200 border border-indigo-500/40 font-semibold text-xs flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
+        <button id="btnOpenCutterBox" onclick="window.openCutterModal && window.openCutterModal()" type="button" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600/30 to-violet-600/30 hover:from-indigo-600/40 hover:to-violet-600/40 text-indigo-200 border border-indigo-500/40 font-semibold text-xs flex items-center justify-center gap-2 transition shadow-sm cursor-pointer active:scale-95">
           <i class="fa-solid fa-scissors text-indigo-400"></i> Mở Trình Cắt Sóng Âm Trực Quan (Waveform Slicer)
         </button>
 
@@ -314,21 +334,21 @@
   </main>
 
   <!-- WAVEFORM AUDIO CUTTER MODAL -->
-  <div id="cutterModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="glass-card bg-slate-900/95 border border-indigo-500/40 rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+  <div id="cutterModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="glass-card bg-slate-900/95 border border-indigo-500/40 rounded-2xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200 max-h-[95vh] overflow-y-auto custom-scrollbar">
       
       <!-- Modal Header -->
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-400 shrink-0">
             <i class="fa-solid fa-scissors"></i>
           </div>
-          <div>
-            <h3 class="font-bold text-slate-100 text-sm">Trình Cắt Sóng Âm & Bóc Tách Giọng Mẫu (MP3 Cutter)</h3>
-            <p class="text-[11px] text-slate-400">Chọn chính xác đoạn thoại bạn cần từ file âm thanh dài để nạp trực tiếp vào Style</p>
+          <div class="truncate">
+            <h3 class="font-bold text-slate-100 text-sm truncate">Trình Cắt Sóng Âm & Đổi Tên MP3</h3>
+            <p class="text-[11px] text-slate-400 truncate">Cắt đúng đoạn thoại cần thiết và nạp vào Style tùy chọn</p>
           </div>
         </div>
-        <button id="btnCloseCutterModal" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center transition">
+        <button id="btnCloseCutterModal" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center transition cursor-pointer shrink-0">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -337,15 +357,15 @@
       <div id="cutterUploadArea" class="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition bg-slate-950/50 group">
         <input type="file" id="cutterFileInput" accept=".mp3,.wav,.m4a,.flac,.ogg" class="hidden">
         <i class="fa-solid fa-file-audio text-2xl text-slate-400 group-hover:text-indigo-400 mb-1 transition"></i>
-        <span id="cutterUploadText" class="text-xs font-semibold text-slate-200">Bấm để chọn file lồng tiếng / MP3 dài cần cắt</span>
+        <span id="cutterUploadText" class="text-xs font-semibold text-slate-200 text-center">Bấm để chọn file lồng tiếng / MP3 dài cần cắt</span>
         <span class="text-[10px] text-slate-500 mt-0.5">Hỗ trợ MP3, WAV từ vài giây đến 30 phút</span>
       </div>
 
       <!-- Waveform Canvas Section (Hidden until audio loaded) -->
-      <div id="cutterWaveformSection" class="hidden space-y-4">
+      <div id="cutterWaveformSection" class="hidden space-y-3.5">
         
         <!-- Live Playhead Status Readout Banner -->
-        <div id="cutterLiveStatusBanner" class="bg-gradient-to-r from-indigo-950/80 to-slate-950 p-3 rounded-xl border border-indigo-500/30 flex items-center justify-between text-xs">
+        <div id="cutterLiveStatusBanner" class="bg-gradient-to-r from-indigo-950/80 to-slate-950 p-3 rounded-xl border border-indigo-500/30 flex items-center justify-between text-xs flex-wrap gap-2">
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" id="cutterLivePulse"></span>
             <span class="text-slate-400">Đang phát:</span>
@@ -368,7 +388,7 @@
         </div>
 
         <!-- Time Controls Grid with Mobile Nudge Buttons -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-950/80 p-3.5 rounded-xl border border-slate-800/80">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs bg-slate-950/80 p-3 rounded-xl border border-slate-800/80">
           
           <!-- Start Time Control & Nudge -->
           <div class="space-y-1.5 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
@@ -407,46 +427,43 @@
         </div>
 
         <!-- Preview Audio Controls & Strict Stop Indicator -->
-        <div class="flex items-center justify-between bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+        <div class="flex items-center justify-between bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex-wrap gap-2">
           <div class="flex items-center gap-2">
-            <button id="btnPlayCutterSelection" type="button" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition active:scale-95">
+            <button id="btnPlayCutterSelection" type="button" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition active:scale-95 cursor-pointer">
               <i class="fa-solid fa-play" id="playIcon"></i> <span id="btnPlayCutterText">Nghe Thử Đoạn Cắt</span>
             </button>
-            <button id="btnStopCutter" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs flex items-center gap-1.5 transition">
+            <button id="btnStopCutter" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs flex items-center gap-1.5 transition cursor-pointer">
               <i class="fa-solid fa-stop"></i> Về Đầu
             </button>
           </div>
           <div class="text-[11px] font-mono text-slate-400 flex items-center gap-1">
             <i class="fa-solid fa-shield-halved text-emerald-400"></i>
-            <span>Tự động dừng đúng điểm kết</span>
+            <span>Dừng đúng điểm kết</span>
           </div>
         </div>
 
-        <!-- Destination Style Choice -->
-        <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
-          <span class="text-slate-300 font-semibold block">Đích Đến Của Giọng Mẫu Đã Cắt:</span>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <label class="flex items-center gap-2 bg-slate-900 p-2.5 rounded-lg border border-slate-800 cursor-pointer hover:border-indigo-500/50">
-              <input type="radio" name="cutterTarget" value="current" checked class="accent-indigo-500">
-              <span class="text-slate-200">Gắn vào Style đang chọn (<b id="cutterCurrentStyleName" class="text-indigo-400">neutral</b>)</span>
-            </label>
-            <label class="flex items-center gap-2 bg-slate-900 p-2.5 rounded-lg border border-slate-800 cursor-pointer hover:border-indigo-500/50">
-              <input type="radio" name="cutterTarget" value="new" class="accent-indigo-500">
-              <span class="text-slate-200">Tạo một Style nhân vật mới</span>
-            </label>
-          </div>
+        <!-- Rename Sliced MP3 Sample Input -->
+        <div class="space-y-1 bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-xs">
+          <label class="block font-semibold text-slate-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-file-signature text-amber-400"></i> Đặt Tên File MP3 Đoạn Cắt (Tùy chọn):
+          </label>
+          <input type="text" id="cutterCustomSliceName" placeholder="Ví dụ: doan_hai_huoc_1, loi_chao_dau..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:border-indigo-500">
+        </div>
 
-          <!-- New Style Name Input (shown if radio 'new' selected) -->
-          <div id="cutterNewStyleInputs" class="hidden grid grid-cols-2 gap-2 pt-1">
-            <input type="text" id="cutterNewStyleId" placeholder="Mã style (vd: chau_tinh_tri_2)" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:border-indigo-500">
-            <input type="text" id="cutterNewStyleName" placeholder="Tên hiển thị (vd: Châu Tinh Trì La Hét)" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:border-indigo-500">
-          </div>
+        <!-- Destination Style Choice Dropdown -->
+        <div class="space-y-1.5 bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-xs">
+          <label class="block font-semibold text-slate-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-bullseye text-emerald-400"></i> Chọn Style Đích Để Nạp Đoạn Cắt Này:
+          </label>
+          <select id="cutterTargetStyleSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs font-semibold text-emerald-300 focus:border-emerald-500 cursor-pointer">
+            <!-- Populated via JS -->
+          </select>
         </div>
 
         <!-- Action Button -->
-        <button id="btnExecuteSliceAndProfile" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 active:scale-98">
+        <button id="btnExecuteSliceAndProfile" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer">
           <i class="fa-solid fa-scissors"></i>
-          <span id="btnExecuteSliceText">Cắt & Bóc Tách Phổ Nạp Vào Style Ngay</span>
+          <span id="btnExecuteSliceText">Cắt & Nạp Vào Style Ngay</span>
         </button>
 
       </div>
@@ -738,14 +755,69 @@
     </div>
   </div>
 
+  <!-- RENAME STYLE MODAL -->
+  <div id="renameStyleModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900/95 border border-amber-500/40 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 animate-in fade-in">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <h3 class="font-bold text-slate-100 text-sm flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-amber-400"></i> Đổi Tên Hiển Thị Của Style
+        </h3>
+        <button id="btnCloseRenameModal" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+      <div class="space-y-2 text-xs">
+        <label class="block text-slate-300 font-medium">Mã Style:</label>
+        <input type="text" id="renameStyleIdInput" readonly class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-400 font-mono text-xs opacity-75">
+        
+        <label class="block text-slate-300 font-medium pt-1">Tên Hiển Thị Mới:</label>
+        <input type="text" id="renameStyleNameInput" placeholder="Nhập tên hiển thị mới..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-100 font-semibold text-xs focus:border-amber-500">
+      </div>
+      <div class="flex items-center justify-end space-x-2 pt-2">
+        <button id="btnCancelRename" type="button" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer">Hủy</button>
+        <button id="btnConfirmRename" type="button" class="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-xs font-bold shadow-md cursor-pointer active:scale-95">Lưu Tên Mới</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERVER SETTINGS MODAL (Backend URL Config for Vercel/Cloud) -->
+  <div id="serverSettingsModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900/95 border border-indigo-500/40 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 animate-in fade-in">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <h3 class="font-bold text-slate-100 text-sm flex items-center gap-2">
+          <i class="fa-solid fa-server text-indigo-400"></i> Cài Đặt Kết Nối Máy Chủ AI (Backend)
+        </h3>
+        <button id="btnCloseServerModal" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+      <div class="space-y-2.5 text-xs">
+        <p class="text-slate-300 leading-relaxed">
+          Khi dùng giao diện trên Vercel, ứng dụng cần kết nối đến máy chủ Backend Python để sinh giọng.
+        </p>
+        <label class="block text-slate-300 font-medium">Địa chỉ Backend URL:</label>
+        <input type="text" id="serverBackendUrlInput" placeholder="http://127.0.0.1:8000 hoặc link Ngrok/Cloud..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-100 font-mono text-xs focus:border-indigo-500">
+        
+        <div class="flex items-center justify-between pt-1">
+          <span id="serverTestResult" class="text-[11px] text-slate-400">Chưa kiểm tra kết nối</span>
+          <button id="btnTestServerConnection" type="button" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-indigo-300 text-[11px] font-semibold cursor-pointer">Kiểm Tra</button>
+        </div>
+      </div>
+      <div class="flex items-center justify-end space-x-2 pt-2">
+        <button id="btnResetServerDefault" type="button" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer">Mặc Định</button>
+        <button id="btnSaveServerUrl" type="button" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md cursor-pointer active:scale-95">Lưu & Kết Nối</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="border-t border-slate-800/80 bg-slate-950 py-4 text-center text-xs text-slate-500">
     <div class="max-w-6xl mx-auto px-4">
-      LAPQUE Personal Vietnamese TTS Studio • Thiết kế độc quyền cho 1 người dùng • 0 đồng • Tuân thủ bản quyền độc lập
+      HUY HOÀNG Vietnamese AI Voice Studio • Hotline: 0933116860 • Độc quyền cá nhân • 0đ
     </div>
   </footer>
 
-  <script src="/app.js?v=20260825_neural_trainer_v2"></script>
+  <script src="/app.js?v=20260826_mobile_opt_v3"></script>
 </body>
 </html>
 

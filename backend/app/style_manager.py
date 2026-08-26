@@ -125,6 +125,28 @@ class StyleManager:
         self.save_custom_styles()
         return profile
 
+    def rename_style(self, style_id: str, new_name: str) -> bool:
+        """Rename an existing style and save."""
+        sid = style_id.lower().strip()
+        self.load_custom_styles()
+        if sid in self.styles:
+            self.styles[sid].name = new_name.strip()
+            self.save_custom_styles()
+            
+            # Update acoustic_profile.json if exists
+            prof_json = os.path.join(self.project_root, "data", "voice", sid, "acoustic_profile.json")
+            if os.path.exists(prof_json):
+                try:
+                    with open(prof_json, "r", encoding="utf-8") as fp:
+                        p_data = json.load(fp)
+                    p_data["style_name"] = new_name.strip()
+                    with open(prof_json, "w", encoding="utf-8") as fp:
+                        json.dump(p_data, fp, indent=2, ensure_ascii=False)
+                except Exception:
+                    pass
+            return True
+        return False
+
     def list_styles(self) -> List[Dict[str, Any]]:
         """List all available style profiles as JSON-serializable dictionaries including dynamic acoustic profiles."""
         self.load_custom_styles()
