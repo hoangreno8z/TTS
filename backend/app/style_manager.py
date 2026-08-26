@@ -27,46 +27,46 @@ class StyleProfile:
 DEFAULT_STYLES: Dict[str, StyleProfile] = {
     "loc_dinh_ky": StyleProfile(
         style_id="loc_dinh_ky",
-        name="Lộc Đỉnh Ký (Châu Tinh Trì)",
-        description="Giọng lồng tiếng hài hước, dí dỏm đặc trưng của Châu Tinh Trì (Vi Tiểu Bảo).",
+        name="Lộc Đỉnh Ký",
+        description="Lồng tiếng Châu Tinh Trì",
         speed=1.0,
         pause_multiplier=1.0,
         pitch_adjustment=0.0,
         energy_adjustment=1.0,
-        prompt_context="[Phong cách lồng tiếng Châu Tinh Trì]",
+        prompt_context="[Phong cách Lộc Đỉnh Ký]",
         ref_audio_subfolder="loc_dinh_ky"
     ),
     "neutral": StyleProfile(
         style_id="neutral",
-        name="Nam - Mặc Định (Nam Minh)",
-        description="Giọng nam chuẩn tiếng Việt, tự nhiên, rõ ràng, tốc độ tiêu chuẩn.",
+        name="Mặc Định",
+        description="Giọng nam chuẩn tiếng Việt",
         speed=1.0,
         pause_multiplier=1.0,
         pitch_adjustment=0.0,
         energy_adjustment=1.0,
-        prompt_context="[Phong cách chuẩn mực, điềm đạm]",
+        prompt_context="[Phong cách mặc định]",
         ref_audio_subfolder="neutral"
     ),
     "storytelling": StyleProfile(
         style_id="storytelling",
-        name="Kể Chuyện (Truyền Cảm)",
-        description="Giọng biểu cảm truyền cảm, giàu cảm xúc, nhấn nhá sinh động, phù hợp truyện đọc và thuyết minh.",
+        name="Kể Chuyện",
+        description="Giọng đọc truyền cảm",
         speed=1.05,
         pause_multiplier=1.1,
         pitch_adjustment=0.3,
         energy_adjustment=1.15,
-        prompt_context="[Phong cách kể chuyện, giàu cảm xúc, nhấn nhá truyền cảm]",
+        prompt_context="[Phong cách kể chuyện]",
         ref_audio_subfolder="storytelling"
     ),
     "serious": StyleProfile(
         style_id="serious",
-        name="Nghiêm Túc (Trầm Ổn)",
-        description="Giọng trầm ổn, trang trọng, tốc độ chậm rãi, dứt khoát, phù hợp tin tức.",
+        name="Nghiêm Túc",
+        description="Giọng trầm ổn, trang trọng",
         speed=0.92,
         pause_multiplier=1.25,
         pitch_adjustment=-0.5,
         energy_adjustment=0.95,
-        prompt_context="[Phong cách nghiêm túc, trầm tĩnh, dứt khoát]",
+        prompt_context="[Phong cách nghiêm túc]",
         ref_audio_subfolder="serious"
     )
 }

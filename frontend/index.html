@@ -108,121 +108,69 @@
       </div>
 
       <!-- Voice & Style Selector Card (Above Synthesis Button) -->
-      <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 border-indigo-500/20">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-            <i class="fa-solid fa-masks-theater text-indigo-400"></i> Chọn Giọng & Phong Cách Đọc
-          </h2>
-          <div class="flex items-center space-x-2">
-            <button id="btnRenameCurrentStyle" type="button" class="text-xs text-amber-400 hover:text-amber-300 transition flex items-center gap-1 font-medium bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 active:scale-95 cursor-pointer" title="Đổi tên hiển thị của Style đang chọn">
+      <div class="glass-card rounded-2xl p-3.5 sm:p-4 shadow-xl space-y-2.5 border-indigo-500/20">
+        <div class="flex items-center justify-between">
+          <label class="text-xs sm:text-sm font-semibold text-slate-200 flex items-center gap-1.5">
+            <i class="fa-solid fa-masks-theater text-indigo-400"></i> Chọn Giọng & Phong Cách
+          </label>
+          <div class="flex items-center space-x-1.5">
+            <button id="btnRenameCurrentStyle" type="button" class="text-xs text-amber-400 hover:text-amber-300 transition flex items-center gap-1 font-medium bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20 active:scale-95 cursor-pointer" title="Đổi tên Style đang chọn">
               <i class="fa-solid fa-pen-to-square text-[10px]"></i> Sửa Tên
             </button>
-            <button id="btnOpenAddStyle" class="text-xs text-indigo-400 hover:text-indigo-300 transition flex items-center gap-1 font-medium bg-indigo-500/10 px-2 py-1 rounded-lg border border-indigo-500/20 active:scale-95 cursor-pointer">
-              <i class="fa-solid fa-plus text-[10px]"></i> Thêm Mới
+            <button id="btnOpenAddStyle" class="text-xs text-indigo-400 hover:text-indigo-300 transition flex items-center gap-1 font-medium bg-indigo-500/10 px-2 py-0.5 rounded-lg border border-indigo-500/20 active:scale-95 cursor-pointer">
+              <i class="fa-solid fa-plus text-[10px]"></i> Thêm
             </button>
           </div>
         </div>
 
-        <!-- Gender & Voice Category Tabs -->
+        <!-- Gender Tabs (Nam / Nữ) -->
         <div class="grid grid-cols-2 gap-2">
-          <button type="button" id="btnVoiceMale" class="py-2.5 px-3 rounded-xl bg-indigo-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-indigo-500 shadow-md shadow-indigo-600/20 transition active:scale-95 cursor-pointer">
-            <i class="fa-solid fa-user-tie"></i>
-            <span>👨 Giọng Nam & Nhân Vật</span>
+          <button type="button" id="btnVoiceMale" class="py-2 px-3 rounded-xl bg-indigo-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-indigo-500 shadow-md shadow-indigo-600/20 transition active:scale-95 cursor-pointer">
+            <i class="fa-solid fa-user-tie text-xs"></i>
+            <span>👨 Giọng Nam</span>
           </button>
-          <button type="button" id="btnVoiceFemale" class="py-2.5 px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-medium text-xs sm:text-sm flex items-center justify-center gap-2 border border-slate-800 transition active:scale-95 cursor-pointer">
-            <i class="fa-solid fa-user"></i>
-            <span>👩 Giọng Nữ (Hoài My)</span>
+          <button type="button" id="btnVoiceFemale" class="py-2 px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-800 transition active:scale-95 cursor-pointer">
+            <i class="fa-solid fa-user text-xs"></i>
+            <span>👩 Giọng Nữ</span>
           </button>
         </div>
 
-        <!-- Male Styles Section with Dropdown & Touch-friendly Cards -->
-        <div id="maleStylesSection" class="space-y-2.5">
-          <div class="flex items-center justify-between text-xs text-slate-400">
-            <span>Danh sách phong cách giọng Nam:</span>
-            <span id="activeStyleIndicator" class="text-indigo-300 font-semibold font-mono truncate max-w-[220px]">Đang chọn: Lộc Đỉnh Ký (Châu Tinh Trì)</span>
-          </div>
-
-          <!-- Quick Dropdown (Mobile-first fast selection) -->
-          <select id="mobileStyleSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm font-semibold text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition cursor-pointer">
-            <option value="loc_dinh_ky" selected>🎬 Lộc Đỉnh Ký (Châu Tinh Trì) - 1.0x</option>
-            <option value="neutral">🎙️ Nam - Mặc Định (Nam Minh) - 1.0x</option>
-            <option value="storytelling">📖 Kể Chuyện (Truyền Cảm) - 1.05x</option>
-            <option value="serious">🏛️ Nghiêm Túc (Trầm Ổn) - 0.92x</option>
-            <option value="lali5">✨ Nhân Vật Lali 5 - 1.08x</option>
+        <!-- Single Dropdown Menu for Styles -->
+        <div id="maleStylesSection" class="space-y-1">
+          <select id="mobileStyleSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm font-semibold text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition cursor-pointer">
+            <option value="loc_dinh_ky" selected>🎬 Lộc Đỉnh Ký</option>
+            <option value="neutral">🎙️ Mặc Định</option>
+            <option value="storytelling">📖 Kể Chuyện</option>
+            <option value="serious">🏛️ Nghiêm Túc</option>
+            <option value="lali5">✨ Lali 5</option>
           </select>
-
-          <!-- Grid Card Selector (Touch-friendly cards) -->
-          <div id="stylesContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-            <button type="button" data-style="loc_dinh_ky" class="style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer border-indigo-500/60 bg-indigo-500/15 shadow-md shadow-indigo-500/10 active ring-1 ring-indigo-500/40">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-bold text-xs sm:text-sm text-indigo-300 flex items-center gap-1.5 truncate">
-                  <i class="fa-solid fa-masks-theater text-amber-400 text-xs"></i> Lộc Đỉnh Ký (Châu Tinh Trì)
-                </span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 bg-indigo-500/30 text-indigo-200 font-bold font-mono">1.0x</span>
-              </div>
-              <p class="text-[11px] text-slate-400 line-clamp-2 leading-tight">Giọng lồng tiếng hài hước, dí dỏm đặc trưng của Châu Tinh Trì (Vi Tiểu Bảo).</p>
-            </button>
-
-            <button type="button" data-style="neutral" class="style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer border-slate-800 bg-slate-900/60 hover:border-slate-700">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-1.5 truncate">
-                  <i class="fa-solid fa-microphone-lines text-xs"></i> Nam - Mặc Định (Nam Minh)
-                </span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">1.0x</span>
-              </div>
-              <p class="text-[11px] text-slate-400 line-clamp-2 leading-tight">Giọng nam chuẩn tiếng Việt, tự nhiên, rõ ràng, tốc độ tiêu chuẩn.</p>
-            </button>
-
-            <button type="button" data-style="storytelling" class="style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer border-slate-800 bg-slate-900/60 hover:border-slate-700">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-1.5 truncate">
-                  <i class="fa-solid fa-book-open-reader text-xs"></i> Kể Chuyện (Truyền Cảm)
-                </span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">1.05x</span>
-              </div>
-              <p class="text-[11px] text-slate-400 line-clamp-2 leading-tight">Giọng biểu cảm truyền cảm, nhấn nhá sinh động, phù hợp truyện đọc.</p>
-            </button>
-
-            <button type="button" data-style="serious" class="style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer border-slate-800 bg-slate-900/60 hover:border-slate-700">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-1.5 truncate">
-                  <i class="fa-solid fa-landmark text-xs"></i> Nghiêm Túc (Trầm Ổn)
-                </span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">0.92x</span>
-              </div>
-              <p class="text-[11px] text-slate-400 line-clamp-2 leading-tight">Giọng trầm ổn, trang trọng, tốc độ chậm rãi, ngắt nghỉ dứt khoát.</p>
-            </button>
-          </div>
         </div>
 
         <!-- Female Voice Notice Section -->
-        <div id="femaleVoiceNotice" class="hidden bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-1">
-          <div class="font-semibold text-indigo-300 flex items-center gap-1.5">
-            <i class="fa-solid fa-circle-check text-emerald-400"></i> Giọng Nữ Chuẩn (Hoài My Neural)
-          </div>
-          <p class="text-[11px] text-slate-400">Giọng đọc nữ truyền cảm, mượt mà, phù hợp kể chuyện, thuyết minh và tin tức.</p>
+        <div id="femaleVoiceNotice" class="hidden bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 text-xs text-indigo-300 font-medium flex items-center justify-between">
+          <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-400"></i> Giọng Nữ: Hoài My</span>
+          <span class="text-[10px] text-slate-400 font-mono">Mặc Định</span>
         </div>
 
         <!-- Add Custom Style Form (Collapsible) -->
-        <div id="addStyleForm" class="hidden bg-slate-900/95 rounded-xl p-4 border border-indigo-500/40 space-y-3 text-xs animate-in fade-in">
+        <div id="addStyleForm" class="hidden bg-slate-900/95 rounded-xl p-3 border border-indigo-500/40 space-y-2.5 text-xs animate-in fade-in">
           <div class="font-semibold text-slate-200 flex items-center justify-between">
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> Tạo Phong Cách / Giọng Nhân Vật Mới</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> Tạo Phong Cách Mới</span>
             <button id="btnCloseAddStyle" class="text-slate-500 hover:text-slate-300 text-sm p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <input type="text" id="newStyleId" placeholder="Mã style viết liền (vd: dora_vn, ton_ngo_khong)" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:border-indigo-500 text-xs">
-            <input type="text" id="newStyleName" placeholder="Tên hiển thị (vd: Tôn Ngộ Không Vui Tính)" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:border-indigo-500 text-xs">
+            <input type="text" id="newStyleId" placeholder="Mã style (vd: tôn_ngộ_không)" class="bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 focus:border-indigo-500 text-xs">
+            <input type="text" id="newStyleName" placeholder="Tên hiển thị (vd: Ngộ Không)" class="bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 focus:border-indigo-500 text-xs">
           </div>
-          <input type="text" id="newStyleDesc" placeholder="Mô tả phong cách (vd: Giọng đanh thép, lanh lợi, dứt khoát)" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:border-indigo-500 text-xs">
           
-          <div class="border border-dashed border-slate-800 rounded-lg p-3 bg-slate-950/60">
-            <label class="block text-slate-400 mb-1 text-[11px] font-medium">Tải lên các file MP3/WAV giọng mẫu của nhân vật:</label>
+          <div class="border border-dashed border-slate-800 rounded-lg p-2.5 bg-slate-950/60">
+            <label class="block text-slate-400 mb-1 text-[11px] font-medium">Tải file MP3 giọng mẫu:</label>
             <input type="file" id="newStyleFiles" multiple accept=".mp3,.wav,.m4a,.flac" class="text-[11px] text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
           </div>
 
-          <button id="btnSaveNewStyle" class="w-full py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer">
+          <button id="btnSaveNewStyle" class="w-full py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer">
             <i class="fa-solid fa-microchip"></i>
-            <span id="btnSaveNewStyleText">Bóc Tách Phổ Fourier & Tạo Style</span>
+            <span id="btnSaveNewStyleText">Tạo Style Mới</span>
           </button>
         </div>
       </div>
@@ -280,7 +228,7 @@
           </div>
           <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
             <span class="text-slate-500 block mb-0.5">Phong cách:</span>
-            <span id="resStyle" class="font-semibold text-indigo-300">Lộc Đỉnh Ký (Châu Tinh Trì)</span>
+            <span id="resStyle" class="font-semibold text-indigo-300">Lộc Đỉnh Ký</span>
           </div>
           <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
             <span class="text-slate-500 block mb-0.5">Thời gian xử lý:</span>
@@ -315,7 +263,7 @@
             <i class="fa-solid fa-waveform-lines text-indigo-400"></i> Nạp Mẫu MP3 Vào Style
           </h2>
           <span id="targetStyleBadge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono truncate max-w-[180px]">
-            Gắn cho: Lộc Đỉnh Ký (Châu Tinh Trì)
+            Gắn cho: Lộc Đỉnh Ký
           </span>
         </div>
 
@@ -325,11 +273,11 @@
             <i class="fa-solid fa-tag text-indigo-400"></i> Chọn Style Để Bổ Sung Data Mẫu:
           </label>
           <select id="uploadTargetStyleSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs font-semibold text-indigo-300 focus:border-indigo-500 cursor-pointer">
-            <option value="loc_dinh_ky" selected>Lộc Đỉnh Ký (Châu Tinh Trì)</option>
-            <option value="neutral">Nam - Mặc Định (Nam Minh)</option>
-            <option value="storytelling">Kể Chuyện (Truyền Cảm)</option>
-            <option value="serious">Nghiêm Túc (Trầm Ổn)</option>
-            <option value="lali5">Nhân Vật Lali 5</option>
+            <option value="loc_dinh_ky" selected>Lộc Đỉnh Ký</option>
+            <option value="neutral">Mặc Định</option>
+            <option value="storytelling">Kể Chuyện</option>
+            <option value="serious">Nghiêm Túc</option>
+            <option value="lali5">Lali 5</option>
           </select>
         </div>
 
@@ -502,11 +450,11 @@
             <i class="fa-solid fa-bullseye text-emerald-400"></i> Chọn Style Đích Để Nạp Đoạn Cắt Này:
           </label>
           <select id="cutterTargetStyleSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs font-semibold text-emerald-300 focus:border-emerald-500 cursor-pointer">
-            <option value="loc_dinh_ky" selected>Lộc Đỉnh Ký (Châu Tinh Trì)</option>
-            <option value="neutral">Nam - Mặc Định (Nam Minh)</option>
-            <option value="storytelling">Kể Chuyện (Truyền Cảm)</option>
-            <option value="serious">Nghiêm Túc (Trầm Ổn)</option>
-            <option value="lali5">Nhân Vật Lali 5</option>
+            <option value="loc_dinh_ky" selected>Lộc Đỉnh Ký</option>
+            <option value="neutral">Mặc Định</option>
+            <option value="storytelling">Kể Chuyện</option>
+            <option value="serious">Nghiêm Túc</option>
+            <option value="lali5">Lali 5</option>
           </select>
         </div>
 
@@ -867,7 +815,7 @@
     </div>
   </footer>
 
-  <script src="/app.js?v=20260826_ios_fix_v4"></script>
+  <script src="/app.js?v=20260826_compact_menu_v5"></script>
 </body>
 </html>
 

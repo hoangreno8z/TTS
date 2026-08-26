@@ -52,36 +52,36 @@ document.addEventListener("DOMContentLoaded", () => {
   const maleStylesSection = document.getElementById("maleStylesSection");
   const femaleVoiceNotice = document.getElementById("femaleVoiceNotice");
 
-  // Built-in Default & Character Styles (Always available immediately on iOS & Desktop)
+  // Built-in Default & Character Styles (Ultra compact 2-word names)
   const DEFAULT_FALLBACK_STYLES = [
     {
       style_id: "loc_dinh_ky",
-      name: "Lộc Đỉnh Ký (Châu Tinh Trì)",
-      description: "Giọng lồng tiếng hài hước, dí dỏm đặc trưng của Châu Tinh Trì (Vi Tiểu Bảo).",
+      name: "Lộc Đỉnh Ký",
+      description: "",
       speed: 1.0
     },
     {
       style_id: "neutral",
-      name: "Nam - Mặc Định (Nam Minh)",
-      description: "Giọng nam chuẩn tiếng Việt, tự nhiên, rõ ràng, tốc độ tiêu chuẩn.",
+      name: "Mặc Định",
+      description: "",
       speed: 1.0
     },
     {
       style_id: "storytelling",
-      name: "Kể Chuyện (Truyền Cảm)",
-      description: "Giọng biểu cảm truyền cảm, nhấn nhá sinh động, phù hợp truyện đọc.",
+      name: "Kể Chuyện",
+      description: "",
       speed: 1.05
     },
     {
       style_id: "serious",
-      name: "Nghiêm Túc (Trầm Ổn)",
-      description: "Giọng trầm ổn, trang trọng, tốc độ chậm rãi, dứt khoát.",
+      name: "Nghiêm Túc",
+      description: "",
       speed: 0.92
     },
     {
       style_id: "lali5",
-      name: "Nhân Vật Lali 5",
-      description: "Phong cách giọng nhân vật Lali5 năng động, tươi vui, trẻ trung.",
+      name: "Lali 5",
+      description: "",
       speed: 1.08
     }
   ];
@@ -132,13 +132,18 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderStyles(styles) {
     if (!styles || styles.length === 0) styles = DEFAULT_FALLBACK_STYLES;
 
-    // 1. Populate Mobile Dropdown Selector
+    // 1. Populate Single Dropdown Selector
     if (mobileStyleSelect) {
       mobileStyleSelect.innerHTML = "";
       styles.forEach(st => {
         const opt = document.createElement("option");
         opt.value = st.style_id;
-        opt.textContent = `${st.name} (${st.speed}x)`;
+        let icon = "🎙️";
+        if (st.style_id === "loc_dinh_ky") icon = "🎬";
+        else if (st.style_id === "serious") icon = "🏛️";
+        else if (st.style_id === "storytelling") icon = "📖";
+        else if (st.style_id.includes("lali")) icon = "✨";
+        opt.textContent = `${icon} ${st.name}`;
         if (st.style_id === activeStyle) opt.selected = true;
         mobileStyleSelect.appendChild(opt);
       });
@@ -167,44 +172,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // 3. Render Touch-friendly Grid Cards
-    if (stylesContainer) {
-      stylesContainer.innerHTML = "";
-      styles.forEach((st) => {
-        const isActive = st.style_id === activeStyle;
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.setAttribute("data-style", st.style_id);
-        btn.className = `style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer ${
-          isActive
-            ? "border-indigo-500/60 bg-indigo-500/15 shadow-md shadow-indigo-500/10 active ring-1 ring-indigo-500/40"
-            : "border-slate-800 bg-slate-900/60 hover:border-slate-700"
-        }`;
-
-        let icon = "fa-microphone-lines";
-        if (st.style_id === "loc_dinh_ky") icon = "fa-masks-theater text-amber-400";
-        else if (st.style_id === "serious") icon = "fa-landmark";
-        else if (st.style_id === "storytelling") icon = "fa-book-open-reader";
-        else if (st.style_id.includes("lali")) icon = "fa-wand-magic-sparkles";
-
-        btn.innerHTML = `
-          <div class="flex items-center justify-between mb-1">
-            <span class="font-bold text-xs sm:text-sm ${isActive ? 'text-indigo-300' : 'text-slate-200'} flex items-center gap-1.5 truncate">
-              <i class="fa-solid ${icon} text-xs"></i> ${st.name}
-            </span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 ${isActive ? 'bg-indigo-500/30 text-indigo-200 font-bold' : 'text-slate-400'} font-mono">${st.speed}x</span>
-          </div>
-          <p class="text-[11px] text-slate-400 line-clamp-2 leading-tight">${st.description || 'Phong cách giọng nói'}</p>
-        `;
-
-        btn.addEventListener("click", () => {
-          setActiveStyle(st.style_id);
-        });
-
-        stylesContainer.appendChild(btn);
-      });
-    }
-
     updateActiveStyleUI();
   }
 
@@ -216,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateActiveStyleUI() {
     const curObj = loadedStylesList.find(s => s.style_id === activeStyle);
     const styleName = (selectedGender === "female") 
-      ? "Nữ - Mặc Định (Hoài My)" 
+      ? "Nữ Mặc Định" 
       : (curObj ? curObj.name : activeStyle);
 
     if (activeStyleIndicator) {
@@ -241,6 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const badge = document.getElementById("targetStyleBadge");
     if (badge) badge.textContent = `Gắn cho: ${styleName}`;
+  }
 
     // Update card active classes
     document.querySelectorAll(".style-card").forEach(b => {
@@ -283,18 +251,20 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnVoiceMale && btnVoiceFemale) {
     btnVoiceMale.addEventListener("click", () => {
       selectedGender = "male";
-      btnVoiceMale.className = "py-2.5 px-3 rounded-xl bg-indigo-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-indigo-500 shadow-md shadow-indigo-600/20 transition active:scale-95 cursor-pointer";
-      btnVoiceFemale.className = "py-2.5 px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-medium text-xs sm:text-sm flex items-center justify-center gap-2 border border-slate-800 transition active:scale-95 cursor-pointer";
+      btnVoiceMale.className = "py-2 px-3 rounded-xl bg-indigo-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-indigo-500 shadow-md shadow-indigo-600/20 transition active:scale-95 cursor-pointer";
+      btnVoiceFemale.className = "py-2 px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-800 transition active:scale-95 cursor-pointer";
       if (maleStylesSection) maleStylesSection.classList.remove("hidden");
       if (femaleVoiceNotice) femaleVoiceNotice.classList.add("hidden");
+      updateActiveStyleUI();
     });
 
     btnVoiceFemale.addEventListener("click", () => {
       selectedGender = "female";
-      btnVoiceFemale.className = "py-2.5 px-3 rounded-xl bg-indigo-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-indigo-500 shadow-md shadow-indigo-600/20 transition active:scale-95 cursor-pointer";
-      btnVoiceMale.className = "py-2.5 px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-medium text-xs sm:text-sm flex items-center justify-center gap-2 border border-slate-800 transition active:scale-95 cursor-pointer";
+      btnVoiceFemale.className = "py-2 px-3 rounded-xl bg-indigo-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-indigo-500 shadow-md shadow-indigo-600/20 transition active:scale-95 cursor-pointer";
+      btnVoiceMale.className = "py-2 px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-800 transition active:scale-95 cursor-pointer";
       if (maleStylesSection) maleStylesSection.classList.add("hidden");
       if (femaleVoiceNotice) femaleVoiceNotice.classList.remove("hidden");
+      updateActiveStyleUI();
     });
   }
 
