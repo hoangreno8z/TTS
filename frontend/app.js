@@ -1105,7 +1105,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const formData = new FormData();
         formData.append("style_id", activeStyle);
         for (let i = 0; i < localSamples.length; i++) {
-          formData.append("files", localSamples[i].blob, localSamples[i].filename);
+          const sample = localSamples[i];
+          const fileBlob = sample.blob instanceof Blob ? sample.blob : new Blob([sample.blob], { type: "audio/wav" });
+          formData.append("files", fileBlob, sample.filename || `sample_${i}.wav`);
         }
 
         const res = await fetch(`${API_BASE}/styles/upload-samples`, {
@@ -1115,12 +1117,23 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.detail || "Không thể kết nối Máy Chủ AI. Hãy kiểm tra kết nối trong Menu Công Cụ.");
+          let errorDetail = "Không thể kết nối Máy Chủ AI. Hãy kiểm tra kết nối trong Menu Công Cụ.";
+          try {
+            const errData = await res.json();
+            if (typeof errData.detail === "string") {
+              errorDetail = errData.detail;
+            } else if (Array.isArray(errData.detail)) {
+              errorDetail = errData.detail.map(d => d.msg || JSON.stringify(d)).join(", ");
+            } else if (errData.detail) {
+              errorDetail = JSON.stringify(errData.detail);
+            }
+          } catch (_) {}
+          throw new Error(errorDetail);
         }
 
         const data = await res.json();
-        alert(`Đã đồng bộ thành công ${localSamples.length} mẫu lên Máy Chủ AI để huấn luyện nơ-ron!\n- Vector Faiss: ${data.profile.faiss_timbre_vectors}`);
+        const vectorCount = (data.profile && data.profile.faiss_timbre_vectors) ? data.profile.faiss_timbre_vectors : localSamples.length;
+        alert(`Đã đồng bộ thành công ${localSamples.length} mẫu lên Máy Chủ AI để huấn luyện âm vị!\n- Số mẫu: ${localSamples.length}\n- Vector phân tích: ${vectorCount}`);
         await loadStyles();
         await loadAndRenderStyleSamples();
       } catch (e) {
