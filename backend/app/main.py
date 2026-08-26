@@ -40,14 +40,27 @@ app = FastAPI(
     description="Personal Vietnamese TTS API (1 User, 0 Cost, 5000 Chars, 3 Styles)"
 )
 
-# Allow local frontend CORS
+# Robust CORS configuration for mobile Safari & Vercel
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+@app.middleware("http")
+async def cors_and_ngrok_bypass_middleware(request, call_next):
+    if request.method == "OPTIONS":
+        response = JSONResponse(content={"ok": True})
+    else:
+        response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Expose-Headers"] = "*"
+    return response
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "outputs")

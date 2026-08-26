@@ -2,6 +2,21 @@
  * HUY HOÀNG Studio Lồng Tiếng AI Tiếng Việt - Frontend Client Logic
  */
 
+// Global Fetch Interceptor to bypass Ngrok/Cloud warnings and handle CORS
+const _origFetch = window.fetch;
+window.fetch = async function(url, options = {}) {
+  options = options || {};
+  options.headers = options.headers || {};
+  if (options.headers instanceof Headers) {
+    if (!options.headers.has("ngrok-skip-browser-warning")) {
+      options.headers.set("ngrok-skip-browser-warning", "69420");
+    }
+  } else if (typeof options.headers === "object") {
+    options.headers["ngrok-skip-browser-warning"] = "69420";
+  }
+  return _origFetch(url, options);
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   // Support dynamic Backend URL when deployed on Vercel
   const savedBackendUrl = localStorage.getItem("lapque_custom_backend_url");
