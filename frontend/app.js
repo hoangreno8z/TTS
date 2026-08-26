@@ -1110,11 +1110,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const res = await fetch(`${API_BASE}/styles/upload-samples`, {
           method: "POST",
+          headers: { "ngrok-skip-browser-warning": "69420" },
           body: formData
         });
 
         if (!res.ok) {
-          throw new Error("Không thể kết nối Máy Chủ AI. Hãy kiểm tra kết nối trong Menu Công Cụ.");
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || "Không thể kết nối Máy Chủ AI. Hãy kiểm tra kết nối trong Menu Công Cụ.");
         }
 
         const data = await res.json();

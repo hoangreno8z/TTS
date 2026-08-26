@@ -346,7 +346,7 @@ async def upload_style_samples(
     description: Optional[str] = Form(None)
 ):
     """Upload multiple MP3/WAV files for an existing or new style, extract Fourier & Neural profile."""
-    from app.audio.voice_spectral_profiler import VoiceSpectralProfiler
+    from .audio.voice_spectral_profiler import VoiceSpectralProfiler
     
     clean_style_id = style_id.lower().strip().replace(" ", "_")
     target_raw_dir = os.path.join(PROJECT_ROOT, "data", "raw", clean_style_id)
@@ -484,7 +484,7 @@ def stream_style_sample_audio_endpoint(style_id: str, filename: str):
 @app.delete("/styles/{style_id}/samples/{filename}")
 def delete_style_sample_endpoint(style_id: str, filename: str):
     """Deletes a poor-quality or unwanted audio sample and automatically recalibrates the Style profile."""
-    from app.audio.voice_spectral_profiler import VoiceSpectralProfiler
+    from .audio.voice_spectral_profiler import VoiceSpectralProfiler
     clean_style_id = style_id.lower().strip().replace(" ", "_")
     clean_fname = os.path.basename(filename)
     
@@ -555,7 +555,7 @@ async def slice_and_profile_audio(
 ):
     """Slices a long MP3/WAV file from start_sec to end_sec and runs Fourier & Neural profiling."""
     import soundfile as sf
-    from app.audio.voice_spectral_profiler import VoiceSpectralProfiler
+    from .audio.voice_spectral_profiler import VoiceSpectralProfiler
     
     clean_style_id = style_id.lower().strip().replace(" ", "_")
     target_raw_dir = os.path.join(PROJECT_ROOT, "data", "raw", clean_style_id)
@@ -660,8 +660,8 @@ async def denoise_and_isolate_audio_endpoint(
     custom_filename: Optional[str] = Form(None)
 ):
     """Isolates vocals, removes background music, noise, hum and enhances speech clarity."""
-    from app.audio.vocal_denoiser import VocalDenoiser
-    from app.audio.voice_spectral_profiler import VoiceSpectralProfiler
+    from .audio.vocal_denoiser import VocalDenoiser
+    from .audio.voice_spectral_profiler import VoiceSpectralProfiler
     import shutil
 
     denoiser = VocalDenoiser(target_sr=TARGET_SAMPLE_RATE)
@@ -738,7 +738,7 @@ async def slice_and_denoise_preview_endpoint(
 ):
     """Slices audio and runs vocal isolation/denoising, returning a preview URL and quality metrics for listening before saving."""
     import soundfile as sf
-    from app.audio.vocal_denoiser import VocalDenoiser
+    from .audio.vocal_denoiser import VocalDenoiser
 
     denoiser = VocalDenoiser(target_sr=TARGET_SAMPLE_RATE)
     fname = file.filename or "audio_track.mp3"
@@ -813,7 +813,7 @@ class ConfirmAddStyleRequest(BaseModel):
 @app.post("/audio/confirm-add-to-style")
 def confirm_add_denoised_to_style(req: ConfirmAddStyleRequest):
     """Saves a verified clean audio file directly to the style dataset and updates Fourier & Faiss indices."""
-    from app.audio.voice_spectral_profiler import VoiceSpectralProfiler
+    from .audio.voice_spectral_profiler import VoiceSpectralProfiler
     import shutil
 
     clean_file = os.path.basename(req.filename)
@@ -870,7 +870,7 @@ def get_voice_reference_audio(style_id: str, filename: str):
 @app.get("/voice_samples/{style_id}")
 def list_voice_samples(style_id: str):
     """Lists all available sample WAV/MP3 files for a given style."""
-    from app.audio.acoustic_auto_tuner import get_auto_tuner
+    from .audio.acoustic_auto_tuner import get_auto_tuner
     tuner = get_auto_tuner(PROJECT_ROOT)
     return {"status": "success", "samples": tuner.get_style_samples(style_id)}
 
@@ -894,7 +894,7 @@ class SavePresetRequest(BaseModel):
 @app.post("/autotune/start")
 def start_autotune_session(req: AutoTuneRequest):
     """Starts closed-loop Judge evaluation and Student auto-tuning using real spoken speech."""
-    from app.audio.acoustic_auto_tuner import get_auto_tuner
+    from .audio.acoustic_auto_tuner import get_auto_tuner
     tuner = get_auto_tuner(PROJECT_ROOT)
     return tuner.start_autotune_session(
         style_id=req.style_id,
@@ -907,7 +907,7 @@ def start_autotune_session(req: AutoTuneRequest):
 @app.post("/autotune/continue")
 def continue_autotune_session(req: ContinueTuneRequest):
     """Continues closed-loop optimization for K additional rounds."""
-    from app.audio.acoustic_auto_tuner import get_auto_tuner
+    from .audio.acoustic_auto_tuner import get_auto_tuner
     tuner = get_auto_tuner(PROJECT_ROOT)
     return tuner.continue_autotune_session(
         session_id=req.session_id,
@@ -921,7 +921,7 @@ class PromptInterpretRequest(BaseModel):
 @app.post("/autotune/interpret-prompt")
 def interpret_acoustic_prompt(req: PromptInterpretRequest):
     """Translates user natural language into physical acoustic vectors."""
-    from app.audio.semantic_acoustic_compiler import get_semantic_compiler
+    from .audio.semantic_acoustic_compiler import get_semantic_compiler
     compiler = get_semantic_compiler()
     res = compiler.compile_instruction(req.instruction)
     return {"status": "success", "compiled": res}
@@ -929,7 +929,7 @@ def interpret_acoustic_prompt(req: PromptInterpretRequest):
 @app.post("/autotune/save-preset")
 def save_autotune_preset(req: SavePresetRequest):
     """Saves the user-approved preset to disk only upon user confirmation."""
-    from app.audio.acoustic_auto_tuner import get_auto_tuner
+    from .audio.acoustic_auto_tuner import get_auto_tuner
     tuner = get_auto_tuner(PROJECT_ROOT)
     return tuner.save_optimal_preset(
         session_id=req.session_id,
@@ -953,14 +953,14 @@ class TrainIndexRequest(BaseModel):
 @app.post("/trainer/train-index")
 def train_voice_index(req: TrainIndexRequest):
     """Triggers 1-Click Neural Voice Index Training for a character style."""
-    from app.audio.voice_trainer import get_voice_trainer
+    from .audio.voice_trainer import get_voice_trainer
     trainer = get_voice_trainer(PROJECT_ROOT)
     return trainer.train_style_index(req.style_id)
 
 @app.get("/trainer/status/{style_id}")
 def get_voice_training_status(style_id: str):
     """Returns whether a trained neural index exists for the given style."""
-    from app.audio.voice_trainer import get_voice_trainer
+    from .audio.voice_trainer import get_voice_trainer
     trainer = get_voice_trainer(PROJECT_ROOT)
     return trainer.get_training_status(style_id)
 
