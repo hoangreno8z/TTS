@@ -1191,9 +1191,70 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Execute Slicing + Vocal Isolation & Denoising
+  // =========================================================================
+  // Helper: Convert AudioBuffer to 16-bit PCM WAV Blob
+  // =========================================================================
+  function bufferToWaveBlob(abuffer) {
+    const numOfChan = abuffer.numberOfChannels;
+    const length = abuffer.length * numOfChan * 2 + 44;
+    const out = new DataView(new ArrayBuffer(length));
+    let offset = 0;
+    let pos = 0;
+
+    function writeString(str) {
+      for (let i = 0; i < str.length; i++) {
+        out.setUint8(pos++, str.charCodeAt(i));
+      }
+    }
+
+    function setUint16(data) { out.setUint16(pos, data, true); pos += 2; }
+    function setUint32(data) { out.setUint32(pos, data, true); pos += 4; }
+
+    writeString("RIFF");
+    setUint32(length - 8);
+    writeString("WAVE");
+
+    writeString("fmt ");
+    setUint32(16);
+    setUint16(1); // PCM
+    setUint16(numOfChan);
+    setUint32(abuffer.sampleRate);
+    setUint32(abuffer.sampleRate * 2 * numOfChan);
+    setUint16(numOfChan * 2);
+    setUint16(16); // 16-bit
+
+    writeString("data");
+    setUint32(length - pos - 4);
+
+    const channels = [];
+    for (let i = 0; i < numOfChan; i++) {
+      channels.push(abuffer.getChannelData(i));
+    }
+
+    while (offset < abuffer.length) {
+      for (let i = 0; i < numOfChan; i++) {
+        let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+        sample = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
+        out.setInt16(pos, sample | 0, true);
+        pos += 2;
+      }
+      offset++;
+    }
+
+    return new Blob([out.buffer], { type: "audio/wav" });
+  }
+
+  // Waveform Cutter Denoise Preview & Listen Elements
   const btnExecuteSliceAndDenoise = document.getElementById("btnExecuteSliceAndDenoise");
   const btnExecuteSliceDenoiseText = document.getElementById("btnExecuteSliceDenoiseText");
+  const cutterDenoisePreviewBox = document.getElementById("cutterDenoisePreviewBox");
+  const cutterDenoisedPlayer = document.getElementById("cutterDenoisedPlayer");
+  const cutterClarityBadge = document.getElementById("cutterClarityBadge");
+  const cutterNoiseReducedBadge = document.getElementById("cutterNoiseReducedBadge");
+  const btnConfirmSaveCutterDenoised = document.getElementById("btnConfirmSaveCutterDenoised");
+  const btnCancelCutterDenoised = document.getElementById("btnCancelCutterDenoised");
+
+  let cutterLastDenoisedResult = null;
 
   if (btnExecuteSliceAndDenoise) {
     btnExecuteSliceAndDenoise.addEventListener("click", async () => {
@@ -1208,38 +1269,21 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const targetStyleId = (cutterTargetStyleSelect && cutterTargetStyleSelect.value) || activeStyle;
       const customSliceName = (document.getElementById("cutterCustomSliceName") ? document.getElementById("cutterCustomSliceName").value.trim() : "");
 
       btnExecuteSliceAndDenoise.disabled = true;
       if (btnExecuteSliceDenoiseText) btnExecuteSliceDenoiseText.textContent = "Đang tách giọng & khử nhiễu...";
 
+      const formData = new FormData();
+      formData.append("file", cutterRawFile);
+      formData.append("start_sec", cutterStartSec);
+      formData.append("end_sec", cutterEndSec);
+      formData.append("mode", "full");
+      formData.append("noise_reduction_level", "medium");
+      if (customSliceName) formData.append("custom_slice_name", customSliceName);
+
       try {
-        // 1. Slice audio in browser via OfflineAudioContext
-        const sampleRate = cutterAudioBuffer.sampleRate;
-        const startOffset = Math.floor(cutterStartSec * sampleRate);
-        const endOffset = Math.floor(cutterEndSec * sampleRate);
-        const frameCount = endOffset - startOffset;
-
-        const offlineCtx = new OfflineAudioContext(1, frameCount, sampleRate);
-        const bufferSource = offlineCtx.createBufferSource();
-        bufferSource.buffer = cutterAudioBuffer;
-        bufferSource.connect(offlineCtx.destination);
-        bufferSource.start(0, cutterStartSec, dur);
-        const renderedBuffer = await offlineCtx.startRendering();
-
-        const wavBlob = bufferToWaveBlob(renderedBuffer);
-
-        const formData = new FormData();
-        formData.append("file", wavBlob, "sliced_audio.wav");
-        formData.append("mode", "full");
-        formData.append("noise_reduction_level", "medium");
-        formData.append("remove_bg_music", "true");
-        formData.append("boost_clarity", "true");
-        formData.append("save_to_style", targetStyleId);
-        if (customSliceName) formData.append("custom_filename", customSliceName);
-
-        const res = await fetch(`${API_BASE}/audio/denoise-and-isolate`, {
+        const res = await fetch(`${API_BASE}/audio/slice-and-denoise-preview`, {
           method: "POST",
           body: formData
         });
@@ -1250,17 +1294,84 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const data = await res.json();
-        activeStyle = targetStyleId;
-        await loadStyles();
-        closeCutter();
+        cutterLastDenoisedResult = data;
 
-        alert(` ${data.message}\n- File sạch: ${data.filename}\n- Độ trong của giọng: ${data.metrics.vocal_clarity_score}/100\n- Đã triệt tiêu: ${data.metrics.noise_reduction_pct}% tạp âm`);
+        // Render Preview Box
+        if (cutterDenoisedPlayer) {
+          cutterDenoisedPlayer.src = `${API_BASE}${data.preview_audio_url}?t=${Date.now()}`;
+          cutterDenoisedPlayer.play().catch(() => {});
+        }
+
+        if (cutterClarityBadge) {
+          cutterClarityBadge.textContent = `Độ trong: ${data.metrics.vocal_clarity_score}/100`;
+        }
+        if (cutterNoiseReducedBadge) {
+          cutterNoiseReducedBadge.textContent = `Tạp âm giảm: -${data.metrics.noise_reduction_pct}%`;
+        }
+
+        if (cutterDenoisePreviewBox) {
+          cutterDenoisePreviewBox.classList.remove("hidden");
+        }
+
       } catch (e) {
         alert(`Lỗi: ${e.message}`);
       } finally {
         btnExecuteSliceAndDenoise.disabled = false;
-        if (btnExecuteSliceDenoiseText) btnExecuteSliceDenoiseText.textContent = "Tách Nhiễu & Nạp Vào Style";
+        if (btnExecuteSliceDenoiseText) btnExecuteSliceDenoiseText.textContent = "Tách Nhiễu & Nghe Thử";
       }
+    });
+  }
+
+  // Confirm Save Clean Slice to Style
+  if (btnConfirmSaveCutterDenoised) {
+    btnConfirmSaveCutterDenoised.addEventListener("click", async () => {
+      if (!cutterLastDenoisedResult) {
+        alert("Vui lòng thực hiện tách nhiễu đoạn cắt trước!");
+        return;
+      }
+
+      const targetStyleId = (cutterTargetStyleSelect && cutterTargetStyleSelect.value) || activeStyle;
+      const customSliceName = (document.getElementById("cutterCustomSliceName") ? document.getElementById("cutterCustomSliceName").value.trim() : "");
+
+      btnConfirmSaveCutterDenoised.disabled = true;
+      btnConfirmSaveCutterDenoised.textContent = "Đang nạp vào Style...";
+
+      try {
+        const res = await fetch(`${API_BASE}/audio/confirm-add-to-style`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: cutterLastDenoisedResult.filename,
+            style_id: targetStyleId,
+            custom_name: customSliceName || null
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: "Lỗi nạp style" }));
+          throw new Error(err.detail || "Lỗi nạp style");
+        }
+
+        const data = await res.json();
+        activeStyle = targetStyleId;
+        await loadStyles();
+        closeCutter();
+
+        alert(`Đã nạp thành công giọng sạch vào Style '${targetStyleId}'!\n- File: ${data.filename}\n- Vector nơ-ron: ${data.profile.faiss_timbre_vectors}`);
+      } catch (e) {
+        alert(`Lỗi: ${e.message}`);
+      } finally {
+        btnConfirmSaveCutterDenoised.disabled = false;
+        btnConfirmSaveCutterDenoised.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Đồng Ý & Nạp Style';
+      }
+    });
+  }
+
+  // Cancel Denoised Preview
+  if (btnCancelCutterDenoised) {
+    btnCancelCutterDenoised.addEventListener("click", () => {
+      if (cutterDenoisedPlayer) cutterDenoisedPlayer.pause();
+      if (cutterDenoisePreviewBox) cutterDenoisePreviewBox.classList.add("hidden");
     });
   }
 
@@ -1935,35 +2046,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const denoiserTargetStyleSelect = document.getElementById("denoiserTargetStyleSelect");
       const targetStyle = (denoiserTargetStyleSelect && denoiserTargetStyleSelect.value) || activeStyle;
+      const customName = (denoiserCustomFileName ? denoiserCustomFileName.value.trim() : "");
 
       btnSaveDenoisedToStyle.disabled = true;
       btnSaveDenoisedToStyle.textContent = "Đang nạp vào Style...";
 
       try {
-        const audioUrl = `${API_BASE}${denoiserLastProcessedResult.clean_audio_url}`;
-        const audioRes = await fetch(audioUrl);
-        const blob = await audioRes.blob();
-
-        const formData = new FormData();
-        formData.append("files", blob, denoiserLastProcessedResult.filename);
-        formData.append("style_id", targetStyle);
-
-        const uploadRes = await fetch(`${API_BASE}/styles/upload-samples`, {
+        const res = await fetch(`${API_BASE}/audio/confirm-add-to-style`, {
           method: "POST",
-          body: formData
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: denoiserLastProcessedResult.filename,
+            style_id: targetStyle,
+            custom_name: customName || null
+          })
         });
 
-        if (!uploadRes.ok) {
-          const err = await uploadRes.json().catch(() => ({ detail: "Lỗi nạp style" }));
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: "Lỗi nạp style" }));
           throw new Error(err.detail || "Lỗi nạp style");
         }
 
-        const data = await uploadRes.json();
+        const data = await res.json();
         activeStyle = targetStyle;
         await loadStyles();
         closeDenoiser();
 
-        alert(` Đã nạp thành công file giọng sạch vào Style '${targetStyle}'!\n- Vector nơ-ron: ${data.profile.faiss_timbre_vectors}`);
+        alert(`Đã nạp thành công giọng sạch vào Style '${targetStyle}'!\n- File: ${data.filename}\n- Vector nơ-ron: ${data.profile.faiss_timbre_vectors}`);
       } catch (e) {
         alert(`Lỗi: ${e.message}`);
       } finally {

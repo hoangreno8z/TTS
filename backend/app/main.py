@@ -617,6 +617,124 @@ async def denoise_and_isolate_audio_endpoint(
             detail=f"Lỗi khi xử lý tách nhiễu âm thanh: {e}"
         )
 
+@app.post("/audio/slice-and-denoise-preview")
+async def slice_and_denoise_preview_endpoint(
+    file: UploadFile = File(...),
+    start_sec: float = Form(...),
+    end_sec: float = Form(...),
+    mode: str = Form("full"),
+    noise_reduction_level: str = Form("medium"),
+    custom_slice_name: Optional[str] = Form(None)
+):
+    """Slices audio and runs vocal isolation/denoising, returning a preview URL and quality metrics for listening before saving."""
+    import soundfile as sf
+    from app.audio.vocal_denoiser import VocalDenoiser
+
+    denoiser = VocalDenoiser(target_sr=TARGET_SAMPLE_RATE)
+    fname = file.filename or "audio_track.mp3"
+    clean_base = (custom_slice_name.strip().replace(" ", "_") if custom_slice_name else os.path.splitext(fname)[0])
+    clean_base = clean_base.replace(".wav", "").replace(".mp3", "")
+
+    unique_tag = uuid.uuid4().hex[:6]
+    temp_upload_path = os.path.join(DENOISED_DIR, f"temp_slice_in_{unique_tag}_{fname}")
+    temp_raw_slice_path = os.path.join(DENOISED_DIR, f"raw_slice_{unique_tag}.wav")
+    clean_output_path = os.path.join(DENOISED_DIR, f"clean_{clean_base}_{unique_tag}.wav")
+
+    content = await file.read()
+    with open(temp_upload_path, "wb") as f_out:
+        f_out.write(content)
+
+    try:
+        data, sr = sf.read(temp_upload_path)
+        if len(data.shape) > 1:
+            data = np.mean(data, axis=1)
+
+        total_audio_sec = len(data) / float(sr)
+        start_sample = max(0, int(start_sec * sr))
+        end_sample = min(len(data), int(end_sec * sr))
+
+        if start_sample >= end_sample or (end_sample - start_sample) < int(0.5 * sr):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Khoảng thời gian cắt không hợp lệ (từ {start_sec}s đến {end_sec}s trên tổng {total_audio_sec:.1f}s)."
+            )
+
+        sliced_data = data[start_sample:end_sample].astype(np.float32)
+        sf.write(temp_raw_slice_path, sliced_data, sr)
+
+        try:
+            os.remove(temp_upload_path)
+        except OSError:
+            pass
+
+        metrics = denoiser.process_audio(
+            input_audio_path=temp_raw_slice_path,
+            output_audio_path=clean_output_path,
+            mode=mode,
+            noise_reduction_level=noise_reduction_level,
+            remove_bg_music=mode != "denoise_only",
+            boost_clarity=True
+        )
+
+        try:
+            os.remove(temp_raw_slice_path)
+        except OSError:
+            pass
+
+        out_fname = os.path.basename(clean_output_path)
+        return {
+            "status": "success",
+            "filename": out_fname,
+            "preview_audio_url": f"/denoised/{out_fname}",
+            "metrics": metrics,
+            "message": f"Tách giọng & khử nhiễu thành công đoạn {start_sec:.1f}s - {end_sec:.1f}s (Độ trong: {metrics['vocal_clarity_score']}/100, Giảm nhiễu: {metrics['noise_reduction_pct']}%)"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi khi tách nhiễu đoạn cắt: {e}"
+        )
+
+class ConfirmAddStyleRequest(BaseModel):
+    filename: str
+    style_id: str
+    custom_name: Optional[str] = None
+
+@app.post("/audio/confirm-add-to-style")
+def confirm_add_denoised_to_style(req: ConfirmAddStyleRequest):
+    """Saves a verified clean audio file directly to the style dataset and updates Fourier & Faiss indices."""
+    from app.audio.voice_spectral_profiler import VoiceSpectralProfiler
+    import shutil
+
+    clean_file = os.path.basename(req.filename)
+    source_path = os.path.join(DENOISED_DIR, clean_file)
+    if not os.path.exists(source_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File âm thanh đã tách không tồn tại.")
+
+    clean_style_id = req.style_id.lower().strip().replace(" ", "_")
+    target_dir = os.path.join(PROJECT_ROOT, "data", "voice", clean_style_id)
+    os.makedirs(target_dir, exist_ok=True)
+    target_path = os.path.join(target_dir, clean_file)
+
+    shutil.copy2(source_path, target_path)
+
+    profiler = VoiceSpectralProfiler(target_sr=TARGET_SAMPLE_RATE)
+    name_display = req.custom_name or f"Phong cách {clean_style_id.title()}"
+    profile = profiler.process_audio_files(
+        file_paths=[target_path],
+        style_id=clean_style_id,
+        style_name=name_display,
+        description=f"File giọng đã tách sạch ({clean_file})"
+    )
+
+    return {
+        "status": "success",
+        "message": f"Đã nạp thành công giọng sạch vào Style '{name_display}'!",
+        "style_id": clean_style_id,
+        "filename": clean_file,
+        "profile": profile
+    }
+
 @app.post("/voices/upload")
 @app.post("/voices/analyze")
 async def upload_and_analyze_voice(
