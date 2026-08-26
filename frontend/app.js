@@ -52,11 +52,45 @@ document.addEventListener("DOMContentLoaded", () => {
   const maleStylesSection = document.getElementById("maleStylesSection");
   const femaleVoiceNotice = document.getElementById("femaleVoiceNotice");
 
-  let activeStyle = "neutral";
+  // Built-in Default & Character Styles (Always available immediately on iOS & Desktop)
+  const DEFAULT_FALLBACK_STYLES = [
+    {
+      style_id: "loc_dinh_ky",
+      name: "Lộc Đỉnh Ký (Châu Tinh Trì)",
+      description: "Giọng lồng tiếng hài hước, dí dỏm đặc trưng của Châu Tinh Trì (Vi Tiểu Bảo).",
+      speed: 1.0
+    },
+    {
+      style_id: "neutral",
+      name: "Nam - Mặc Định (Nam Minh)",
+      description: "Giọng nam chuẩn tiếng Việt, tự nhiên, rõ ràng, tốc độ tiêu chuẩn.",
+      speed: 1.0
+    },
+    {
+      style_id: "storytelling",
+      name: "Kể Chuyện (Truyền Cảm)",
+      description: "Giọng biểu cảm truyền cảm, nhấn nhá sinh động, phù hợp truyện đọc.",
+      speed: 1.05
+    },
+    {
+      style_id: "serious",
+      name: "Nghiêm Túc (Trầm Ổn)",
+      description: "Giọng trầm ổn, trang trọng, tốc độ chậm rãi, dứt khoát.",
+      speed: 0.92
+    },
+    {
+      style_id: "lali5",
+      name: "Nhân Vật Lali 5",
+      description: "Phong cách giọng nhân vật Lali5 năng động, tươi vui, trẻ trung.",
+      speed: 1.08
+    }
+  ];
+
+  let activeStyle = "loc_dinh_ky";
   let selectedGender = "male";
   let currentAudioFile = null;
   let timerInterval = null;
-  let loadedStylesList = [];
+  let loadedStylesList = [...DEFAULT_FALLBACK_STYLES];
 
   // =========================================================================
   // 1. Check Backend Health & Fetch Styles
@@ -81,19 +115,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadStyles() {
     try {
-      const res = await fetch(`${API_BASE}/styles`);
+      const res = await fetch(`${API_BASE}/styles`, { signal: AbortSignal.timeout(4000) });
       if (res.ok) {
         const styles = await res.json();
-        loadedStylesList = styles;
-        renderStyles(styles);
+        if (styles && styles.length > 0) {
+          loadedStylesList = styles;
+          renderStyles(styles);
+        }
       }
     } catch (e) {
-      console.error("Could not load styles:", e);
+      console.log("Using built-in fallback styles:", e);
+      renderStyles(loadedStylesList);
     }
   }
 
   function renderStyles(styles) {
-    if (!styles || styles.length === 0) return;
+    if (!styles || styles.length === 0) styles = DEFAULT_FALLBACK_STYLES;
 
     // 1. Populate Mobile Dropdown Selector
     if (mobileStyleSelect) {
@@ -178,10 +215,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateActiveStyleUI() {
     const curObj = loadedStylesList.find(s => s.style_id === activeStyle);
-    const styleName = curObj ? curObj.name : activeStyle;
+    const styleName = (selectedGender === "female") 
+      ? "Nữ - Mặc Định (Hoài My)" 
+      : (curObj ? curObj.name : activeStyle);
 
     if (activeStyleIndicator) {
       activeStyleIndicator.textContent = `Đang chọn: ${styleName}`;
+    }
+
+    if (resStyle) {
+      resStyle.textContent = styleName;
     }
 
     if (mobileStyleSelect && mobileStyleSelect.value !== activeStyle) {
@@ -213,6 +256,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // Pre-render immediately on load
+  renderStyles(DEFAULT_FALLBACK_STYLES);
+  updateActiveStyleUI();
 
   if (mobileStyleSelect) {
     mobileStyleSelect.addEventListener("change", (e) => {
@@ -551,7 +598,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       resChars.textContent = data.total_characters.toLocaleString("vi-VN");
       resChunks.textContent = data.total_chunks;
-      resStyle.textContent = data.style;
+      const curStyleObj = loadedStylesList.find(s => s.style_id === data.style);
+      resStyle.textContent = (selectedGender === 'female') ? "Nữ - Mặc Định (Hoài My)" : (curStyleObj ? curStyleObj.name : data.style);
       resTime.textContent = `${data.elapsed_seconds}s`;
       resultBadge.textContent = "Thành công";
       resultBadge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono";

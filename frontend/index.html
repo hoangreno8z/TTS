@@ -139,17 +139,59 @@
         <div id="maleStylesSection" class="space-y-2.5">
           <div class="flex items-center justify-between text-xs text-slate-400">
             <span>Danh sách phong cách giọng Nam:</span>
-            <span id="activeStyleIndicator" class="text-indigo-300 font-semibold font-mono truncate max-w-[200px]">Đang chọn: Lộc Đỉnh Ký</span>
+            <span id="activeStyleIndicator" class="text-indigo-300 font-semibold font-mono truncate max-w-[220px]">Đang chọn: Lộc Đỉnh Ký (Châu Tinh Trì)</span>
           </div>
 
           <!-- Quick Dropdown (Mobile-first fast selection) -->
           <select id="mobileStyleSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm font-semibold text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition cursor-pointer">
-            <!-- Populated via JS -->
+            <option value="loc_dinh_ky" selected>🎬 Lộc Đỉnh Ký (Châu Tinh Trì) - 1.0x</option>
+            <option value="neutral">🎙️ Nam - Mặc Định (Nam Minh) - 1.0x</option>
+            <option value="storytelling">📖 Kể Chuyện (Truyền Cảm) - 1.05x</option>
+            <option value="serious">🏛️ Nghiêm Túc (Trầm Ổn) - 0.92x</option>
+            <option value="lali5">✨ Nhân Vật Lali 5 - 1.08x</option>
           </select>
 
           <!-- Grid Card Selector (Touch-friendly cards) -->
           <div id="stylesContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-            <!-- Rendered via JS -->
+            <button type="button" data-style="loc_dinh_ky" class="style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer border-indigo-500/60 bg-indigo-500/15 shadow-md shadow-indigo-500/10 active ring-1 ring-indigo-500/40">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-bold text-xs sm:text-sm text-indigo-300 flex items-center gap-1.5 truncate">
+                  <i class="fa-solid fa-masks-theater text-amber-400 text-xs"></i> Lộc Đỉnh Ký (Châu Tinh Trì)
+                </span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 bg-indigo-500/30 text-indigo-200 font-bold font-mono">1.0x</span>
+              </div>
+              <p class="text-[11px] text-slate-400 line-clamp-2 leading-tight">Giọng lồng tiếng hài hước, dí dỏm đặc trưng của Châu Tinh Trì (Vi Tiểu Bảo).</p>
+            </button>
+
+            <button type="button" data-style="neutral" class="style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer border-slate-800 bg-slate-900/60 hover:border-slate-700">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-1.5 truncate">
+                  <i class="fa-solid fa-microphone-lines text-xs"></i> Nam - Mặc Định (Nam Minh)
+                </span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">1.0x</span>
+              </div>
+              <p class="text-[11px] text-slate-400 line-clamp-2 leading-tight">Giọng nam chuẩn tiếng Việt, tự nhiên, rõ ràng, tốc độ tiêu chuẩn.</p>
+            </button>
+
+            <button type="button" data-style="storytelling" class="style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer border-slate-800 bg-slate-900/60 hover:border-slate-700">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-1.5 truncate">
+                  <i class="fa-solid fa-book-open-reader text-xs"></i> Kể Chuyện (Truyền Cảm)
+                </span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">1.05x</span>
+              </div>
+              <p class="text-[11px] text-slate-400 line-clamp-2 leading-tight">Giọng biểu cảm truyền cảm, nhấn nhá sinh động, phù hợp truyện đọc.</p>
+            </button>
+
+            <button type="button" data-style="serious" class="style-card text-left p-3 sm:p-3.5 rounded-xl border transition relative cursor-pointer border-slate-800 bg-slate-900/60 hover:border-slate-700">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-1.5 truncate">
+                  <i class="fa-solid fa-landmark text-xs"></i> Nghiêm Túc (Trầm Ổn)
+                </span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">0.92x</span>
+              </div>
+              <p class="text-[11px] text-slate-400 line-clamp-2 leading-tight">Giọng trầm ổn, trang trọng, tốc độ chậm rãi, ngắt nghỉ dứt khoát.</p>
+            </button>
           </div>
         </div>
 
@@ -238,7 +280,7 @@
           </div>
           <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
             <span class="text-slate-500 block mb-0.5">Phong cách:</span>
-            <span id="resStyle" class="font-semibold text-slate-200 capitalize">neutral</span>
+            <span id="resStyle" class="font-semibold text-indigo-300">Lộc Đỉnh Ký (Châu Tinh Trì)</span>
           </div>
           <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
             <span class="text-slate-500 block mb-0.5">Thời gian xử lý:</span>
@@ -251,7 +293,7 @@
           <a
             id="btnDownloadWav"
             href="#"
-            download="lapque_tts_master.wav"
+            download="huyhoang_tts_master.wav"
             class="flex-1 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition opacity-50 pointer-events-none"
           >
             <i class="fa-solid fa-download"></i> Tải WAV (Master)
@@ -272,8 +314,8 @@
           <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
             <i class="fa-solid fa-waveform-lines text-indigo-400"></i> Nạp Mẫu MP3 Vào Style
           </h2>
-          <span id="targetStyleBadge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono truncate max-w-[150px]">
-            Gắn cho: neutral
+          <span id="targetStyleBadge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono truncate max-w-[180px]">
+            Gắn cho: Lộc Đỉnh Ký (Châu Tinh Trì)
           </span>
         </div>
 
@@ -283,7 +325,11 @@
             <i class="fa-solid fa-tag text-indigo-400"></i> Chọn Style Để Bổ Sung Data Mẫu:
           </label>
           <select id="uploadTargetStyleSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs font-semibold text-indigo-300 focus:border-indigo-500 cursor-pointer">
-            <!-- Populated via JS -->
+            <option value="loc_dinh_ky" selected>Lộc Đỉnh Ký (Châu Tinh Trì)</option>
+            <option value="neutral">Nam - Mặc Định (Nam Minh)</option>
+            <option value="storytelling">Kể Chuyện (Truyền Cảm)</option>
+            <option value="serious">Nghiêm Túc (Trầm Ổn)</option>
+            <option value="lali5">Nhân Vật Lali 5</option>
           </select>
         </div>
 
@@ -456,7 +502,11 @@
             <i class="fa-solid fa-bullseye text-emerald-400"></i> Chọn Style Đích Để Nạp Đoạn Cắt Này:
           </label>
           <select id="cutterTargetStyleSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs font-semibold text-emerald-300 focus:border-emerald-500 cursor-pointer">
-            <!-- Populated via JS -->
+            <option value="loc_dinh_ky" selected>Lộc Đỉnh Ký (Châu Tinh Trì)</option>
+            <option value="neutral">Nam - Mặc Định (Nam Minh)</option>
+            <option value="storytelling">Kể Chuyện (Truyền Cảm)</option>
+            <option value="serious">Nghiêm Túc (Trầm Ổn)</option>
+            <option value="lali5">Nhân Vật Lali 5</option>
           </select>
         </div>
 
@@ -817,7 +867,7 @@
     </div>
   </footer>
 
-  <script src="/app.js?v=20260826_mobile_opt_v3"></script>
+  <script src="/app.js?v=20260826_ios_fix_v4"></script>
 </body>
 </html>
 
