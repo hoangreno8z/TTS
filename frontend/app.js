@@ -1910,6 +1910,12 @@ document.addEventListener("DOMContentLoaded", () => {
             cutterNoiseReducedBadge.textContent = `Tạp âm giảm: -${inBrowserResult.metrics.noise_reduction_pct}%`;
           }
 
+          const btnDownloadCutterDenoised = document.getElementById("btnDownloadCutterDenoised");
+          if (btnDownloadCutterDenoised) {
+            btnDownloadCutterDenoised.href = inBrowserResult.preview_audio_url;
+            btnDownloadCutterDenoised.download = inBrowserResult.filename;
+          }
+
           if (cutterDenoisePreviewBox) {
             cutterDenoisePreviewBox.classList.remove("hidden");
           }
@@ -1919,6 +1925,49 @@ document.addEventListener("DOMContentLoaded", () => {
       } finally {
         btnExecuteSliceAndDenoise.disabled = false;
         if (btnExecuteSliceDenoiseText) btnExecuteSliceDenoiseText.textContent = "Tách Nhiễu & Nghe Thử";
+      }
+    });
+  }
+
+  // Download Raw Sliced Audio Segment Directly
+  const btnDownloadRawSlice = document.getElementById("btnDownloadRawSlice");
+  if (btnDownloadRawSlice) {
+    btnDownloadRawSlice.addEventListener("click", async () => {
+      if (!cutterRawFile && !cutterAudioBuffer) {
+        alert("Vui lòng tải lên file âm thanh trước!");
+        return;
+      }
+      const dur = cutterEndSec - cutterStartSec;
+      if (dur < 0.5) {
+        alert("Đoạn cắt quá ngắn (tối thiểu 0.5 giây).");
+        return;
+      }
+      const customSliceName = (document.getElementById("cutterCustomSliceName") ? document.getElementById("cutterCustomSliceName").value.trim() : "");
+      const cleanBase = customSliceName ? customSliceName.replace(/\s+/g, "_") : `doan_cat_${cutterStartSec.toFixed(1)}s_${cutterEndSec.toFixed(1)}s`;
+      const fname = `${cleanBase}.wav`;
+
+      try {
+        const sampleRate = cutterAudioBuffer.sampleRate;
+        const frameCount = Math.max(1, Math.floor(dur * sampleRate));
+        const OfflineCtxClass = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        const offlineCtx = new OfflineCtxClass(cutterAudioBuffer.numberOfChannels, frameCount, sampleRate);
+        const source = offlineCtx.createBufferSource();
+        source.buffer = cutterAudioBuffer;
+        source.connect(offlineCtx.destination);
+        source.start(0, cutterStartSec, dur);
+        const renderedBuffer = await offlineCtx.startRendering();
+        const wavBlob = bufferToWaveBlob(renderedBuffer);
+
+        const blobUrl = URL.createObjectURL(wavBlob);
+        const dl = document.createElement("a");
+        dl.href = blobUrl;
+        dl.download = fname;
+        document.body.appendChild(dl);
+        dl.click();
+        document.body.removeChild(dl);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
+      } catch (err) {
+        alert(`Lỗi khi tải đoạn cắt: ${err.message}`);
       }
     });
   }
@@ -1938,7 +1987,6 @@ document.addEventListener("DOMContentLoaded", () => {
       btnConfirmSaveCutterDenoised.textContent = "Đang nạp vào Style...";
 
       try {
-        // Save permanently to device IndexedDB storage
         await dbSaveSample(
           targetStyleId,
           cutterLastDenoisedResult.filename,
