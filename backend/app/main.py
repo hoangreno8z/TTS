@@ -525,6 +525,98 @@ async def slice_and_profile_audio(
             detail=f"Lỗi khi cắt và phân tích file âm thanh: {e}"
         )
 
+# =========================================================================
+# ADVANCED VOCAL ISOLATION & AUDIO DENOISING API
+# =========================================================================
+DENOISED_DIR = os.path.join(PROJECT_ROOT, "data", "denoised")
+os.makedirs(DENOISED_DIR, exist_ok=True)
+
+@app.get("/denoised/{filename}")
+def get_denoised_audio_file(filename: str):
+    clean_file = os.path.basename(filename)
+    target_path = os.path.join(DENOISED_DIR, clean_file)
+    if not os.path.exists(target_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Denoised file not found.")
+    return FileResponse(target_path, media_type="audio/wav", filename=clean_file)
+
+@app.post("/audio/denoise-and-isolate")
+async def denoise_and_isolate_audio_endpoint(
+    file: UploadFile = File(...),
+    mode: str = Form("full"),
+    noise_reduction_level: str = Form("medium"),
+    remove_bg_music: bool = Form(True),
+    boost_clarity: bool = Form(True),
+    save_to_style: Optional[str] = Form(None),
+    custom_filename: Optional[str] = Form(None)
+):
+    """Isolates vocals, removes background music, noise, hum and enhances speech clarity."""
+    from app.audio.vocal_denoiser import VocalDenoiser
+    from app.audio.voice_spectral_profiler import VoiceSpectralProfiler
+    import shutil
+
+    denoiser = VocalDenoiser(target_sr=TARGET_SAMPLE_RATE)
+    
+    # Save input temporarily
+    original_fname = file.filename or "upload_audio.mp3"
+    clean_base = (custom_filename.strip().replace(" ", "_") if custom_filename else os.path.splitext(original_fname)[0])
+    clean_base = clean_base.replace(".wav", "").replace(".mp3", "")
+    
+    unique_tag = uuid.uuid4().hex[:6]
+    out_filename = f"clean_{clean_base}_{unique_tag}.wav"
+    temp_input_path = os.path.join(DENOISED_DIR, f"raw_in_{unique_tag}_{original_fname}")
+    clean_output_path = os.path.join(DENOISED_DIR, out_filename)
+
+    content = await file.read()
+    with open(temp_input_path, "wb") as f_in:
+        f_in.write(content)
+
+    try:
+        metrics = denoiser.process_audio(
+            input_audio_path=temp_input_path,
+            output_audio_path=clean_output_path,
+            mode=mode,
+            noise_reduction_level=noise_reduction_level,
+            remove_bg_music=remove_bg_music,
+            boost_clarity=boost_clarity
+        )
+
+        try:
+            os.remove(temp_input_path)
+        except OSError:
+            pass
+
+        profile_res = None
+        saved_style = None
+        if save_to_style and save_to_style.strip():
+            saved_style = save_to_style.lower().strip().replace(" ", "_")
+            target_style_dir = os.path.join(PROJECT_ROOT, "data", "voice", saved_style)
+            os.makedirs(target_style_dir, exist_ok=True)
+            saved_copy_path = os.path.join(target_style_dir, out_filename)
+            shutil.copy2(clean_output_path, saved_copy_path)
+
+            profiler = VoiceSpectralProfiler(target_sr=TARGET_SAMPLE_RATE)
+            profile_res = profiler.process_audio_files(
+                file_paths=[saved_copy_path],
+                style_id=saved_style,
+                style_name=f"Style {saved_style.title()}",
+                description=f"File giọng đã tách nhiễu ({out_filename})"
+            )
+
+        return {
+            "status": "success",
+            "filename": out_filename,
+            "clean_audio_url": f"/denoised/{out_filename}",
+            "metrics": metrics,
+            "saved_to_style": saved_style,
+            "profile": profile_res,
+            "message": f"Tách giọng & khử tạp âm thành công! (Độ trong: {metrics['vocal_clarity_score']}/100, Giảm nhiễu: {metrics['noise_reduction_pct']}%)"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi khi xử lý tách nhiễu âm thanh: {e}"
+        )
+
 @app.post("/voices/upload")
 @app.post("/voices/analyze")
 async def upload_and_analyze_voice(

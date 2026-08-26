@@ -172,6 +172,18 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
+    const denoiserTargetStyleSelect = document.getElementById("denoiserTargetStyleSelect");
+    if (denoiserTargetStyleSelect) {
+      denoiserTargetStyleSelect.innerHTML = "";
+      styles.forEach(st => {
+        const opt = document.createElement("option");
+        opt.value = st.style_id;
+        opt.textContent = st.name;
+        if (st.style_id === activeStyle) opt.selected = true;
+        denoiserTargetStyleSelect.appendChild(opt);
+      });
+    }
+
     updateActiveStyleUI();
   }
 
@@ -204,6 +216,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (cutterTargetStyleSelect) {
       cutterTargetStyleSelect.value = activeStyle;
+    }
+
+    const denoiserTargetStyleSelect = document.getElementById("denoiserTargetStyleSelect");
+    if (denoiserTargetStyleSelect) {
+      denoiserTargetStyleSelect.value = activeStyle;
     }
 
     const badge = document.getElementById("targetStyleBadge");
@@ -1133,9 +1150,82 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(`Lỗi: ${e.message}`);
     } finally {
       btnExecuteSliceAndProfile.disabled = false;
-      if (btnExecuteSliceText) btnExecuteSliceText.textContent = "Cắt & Nạp Vào Style Ngay";
+      if (btnExecuteSliceText) btnExecuteSliceText.textContent = "✂️ Cắt Giữ Nguyên & Nạp";
     }
   });
+
+  // Execute Slicing + Vocal Isolation & Denoising
+  const btnExecuteSliceAndDenoise = document.getElementById("btnExecuteSliceAndDenoise");
+  const btnExecuteSliceDenoiseText = document.getElementById("btnExecuteSliceDenoiseText");
+
+  if (btnExecuteSliceAndDenoise) {
+    btnExecuteSliceAndDenoise.addEventListener("click", async () => {
+      if (!cutterRawFile) {
+        alert("Vui lòng tải lên file âm thanh trước!");
+        return;
+      }
+
+      const dur = cutterEndSec - cutterStartSec;
+      if (dur < 0.5) {
+        alert("Đoạn cắt quá ngắn (tối thiểu 0.5 giây).");
+        return;
+      }
+
+      const targetStyleId = (cutterTargetStyleSelect && cutterTargetStyleSelect.value) || activeStyle;
+      const customSliceName = (document.getElementById("cutterCustomSliceName") ? document.getElementById("cutterCustomSliceName").value.trim() : "");
+
+      btnExecuteSliceAndDenoise.disabled = true;
+      if (btnExecuteSliceDenoiseText) btnExecuteSliceDenoiseText.textContent = "Đang tách giọng & khử nhiễu...";
+
+      try {
+        // 1. Slice audio in browser via OfflineAudioContext
+        const sampleRate = cutterAudioBuffer.sampleRate;
+        const startOffset = Math.floor(cutterStartSec * sampleRate);
+        const endOffset = Math.floor(cutterEndSec * sampleRate);
+        const frameCount = endOffset - startOffset;
+
+        const offlineCtx = new OfflineAudioContext(1, frameCount, sampleRate);
+        const bufferSource = offlineCtx.createBufferSource();
+        bufferSource.buffer = cutterAudioBuffer;
+        bufferSource.connect(offlineCtx.destination);
+        bufferSource.start(0, cutterStartSec, dur);
+        const renderedBuffer = await offlineCtx.startRendering();
+
+        const wavBlob = bufferToWaveBlob(renderedBuffer);
+
+        const formData = new FormData();
+        formData.append("file", wavBlob, "sliced_audio.wav");
+        formData.append("mode", "full");
+        formData.append("noise_reduction_level", "medium");
+        formData.append("remove_bg_music", "true");
+        formData.append("boost_clarity", "true");
+        formData.append("save_to_style", targetStyleId);
+        if (customSliceName) formData.append("custom_filename", customSliceName);
+
+        const res = await fetch(`${API_BASE}/audio/denoise-and-isolate`, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: "Lỗi tách nhiễu" }));
+          throw new Error(err.detail || "Lỗi tách nhiễu");
+        }
+
+        const data = await res.json();
+        activeStyle = targetStyleId;
+        await loadStyles();
+        closeCutter();
+
+        alert(`🎉 ${data.message}\n- File sạch: ${data.filename}\n- Độ trong của giọng: ${data.metrics.vocal_clarity_score}/100\n- Đã triệt tiêu: ${data.metrics.noise_reduction_pct}% tạp âm`);
+      } catch (e) {
+        alert(`Lỗi: ${e.message}`);
+      } finally {
+        btnExecuteSliceAndDenoise.disabled = false;
+        if (btnExecuteSliceDenoiseText) btnExecuteSliceDenoiseText.textContent = "✨ Tách Nhiễu & Nạp Vào Style";
+      }
+    });
+  }
 
   // =========================================================================
   // 9. AI JUDGE & CLOSED-LOOP AUTO-TUNE STUDIO (10 METRICS + SAMPLE SELECT + CONTINUE)
@@ -1606,6 +1696,283 @@ document.addEventListener("DOMContentLoaded", () => {
         alert(`Không thể lưu: ${e.message}`);
         btnSaveOptimalPreset.disabled = false;
         btnSavePresetText.textContent = "Đồng Ý & Lưu Bộ Lọc Này";
+      }
+    });
+  }
+
+  // =========================================================================
+  // 10. VOCAL ISOLATION & AUDIO DENOISER STUDIO
+  // =========================================================================
+  const denoiserModal = document.getElementById("denoiserModal");
+  const btnOpenDenoiserHeader = document.getElementById("btnOpenDenoiserHeader");
+  const btnOpenDenoiserBox = document.getElementById("btnOpenDenoiserBox");
+  const btnCloseDenoiserModal = document.getElementById("btnCloseDenoiserModal");
+  const denoiserUploadArea = document.getElementById("denoiserUploadArea");
+  const denoiserFileInput = document.getElementById("denoiserFileInput");
+  const denoiserUploadText = document.getElementById("denoiserUploadText");
+  const denoiserModeSelect = document.getElementById("denoiserModeSelect");
+  const denoiserLevelSelect = document.getElementById("denoiserLevelSelect");
+  const btnExecuteDenoise = document.getElementById("btnExecuteDenoise");
+  const btnExecuteDenoiseText = document.getElementById("btnExecuteDenoiseText");
+
+  const denoiserProgressBox = document.getElementById("denoiserProgressBox");
+  const denoiserStatusText = document.getElementById("denoiserStatusText");
+  const denoiserTimer = document.getElementById("denoiserTimer");
+  const denoiserProgressBar = document.getElementById("denoiserProgressBar");
+
+  const denoiserResultBox = document.getElementById("denoiserResultBox");
+  const denoisedAudioPlayer = document.getElementById("denoisedAudioPlayer");
+  const denoiserClarityBadge = document.getElementById("denoiserClarityBadge");
+  const resNoiseReduced = document.getElementById("resNoiseReduced");
+  const resDenoisedDur = document.getElementById("resDenoisedDur");
+  const resDenoisedElapsed = document.getElementById("resDenoisedElapsed");
+  const denoiserCustomFileName = document.getElementById("denoiserCustomFileName");
+  const btnSaveDenoisedToStyle = document.getElementById("btnSaveDenoisedToStyle");
+  const btnSendDenoisedToCutter = document.getElementById("btnSendDenoisedToCutter");
+  const btnDownloadDenoisedWav = document.getElementById("btnDownloadDenoisedWav");
+
+  let denoiserRawFile = null;
+  let denoiserLastProcessedResult = null;
+  let denoiserTimerInterval = null;
+
+  function openDenoiser() {
+    const denoiserTargetStyleSelect = document.getElementById("denoiserTargetStyleSelect");
+    if (denoiserTargetStyleSelect) denoiserTargetStyleSelect.value = activeStyle;
+    if (denoiserModal) {
+      denoiserModal.classList.remove("hidden");
+      denoiserModal.style.display = "flex";
+    }
+  }
+
+  function closeDenoiser() {
+    if (denoisedAudioPlayer) denoisedAudioPlayer.pause();
+    if (denoiserModal) {
+      denoiserModal.classList.add("hidden");
+      denoiserModal.style.display = "none";
+    }
+  }
+
+  window.openDenoiserModal = openDenoiser;
+
+  if (btnOpenDenoiserHeader) btnOpenDenoiserHeader.addEventListener("click", openDenoiser);
+  if (btnOpenDenoiserBox) btnOpenDenoiserBox.addEventListener("click", openDenoiser);
+  if (btnCloseDenoiserModal) btnCloseDenoiserModal.addEventListener("click", closeDenoiser);
+
+  if (denoiserModal) {
+    denoiserModal.addEventListener("click", (e) => {
+      if (e.target === denoiserModal) closeDenoiser();
+    });
+  }
+
+  if (denoiserUploadArea && denoiserFileInput) {
+    denoiserUploadArea.addEventListener("click", () => denoiserFileInput.click());
+    
+    denoiserUploadArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      denoiserUploadArea.classList.add("border-teal-500", "bg-teal-500/10");
+    });
+
+    denoiserUploadArea.addEventListener("dragleave", () => {
+      denoiserUploadArea.classList.remove("border-teal-500", "bg-teal-500/10");
+    });
+
+    denoiserUploadArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      denoiserUploadArea.classList.remove("border-teal-500", "bg-teal-500/10");
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleDenoiserFileSelect(e.dataTransfer.files[0]);
+      }
+    });
+
+    denoiserFileInput.addEventListener("change", (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleDenoiserFileSelect(e.target.files[0]);
+      }
+    });
+  }
+
+  function handleDenoiserFileSelect(file) {
+    denoiserRawFile = file;
+    if (denoiserUploadText) {
+      denoiserUploadText.innerHTML = `<span class="text-teal-300 font-bold"><i class="fa-solid fa-file-audio"></i> ${file.name}</span> (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+    }
+    if (denoiserCustomFileName) {
+      denoiserCustomFileName.value = file.name.replace(/\.[^/.]+$/, "").replace(/\s+/g, "_") + "_clean";
+    }
+  }
+
+  // Execute Denoise & Vocal Isolation
+  if (btnExecuteDenoise) {
+    btnExecuteDenoise.addEventListener("click", async () => {
+      if (!denoiserRawFile) {
+        alert("Vui lòng chọn hoặc kéo thả file âm thanh trước!");
+        return;
+      }
+
+      btnExecuteDenoise.disabled = true;
+      if (btnExecuteDenoiseText) btnExecuteDenoiseText.textContent = "Đang phân rã sóng âm & tách giọng...";
+      if (denoiserProgressBox) denoiserProgressBox.classList.remove("hidden");
+      if (denoiserResultBox) denoiserResultBox.classList.add("hidden");
+      if (denoiserProgressBar) denoiserProgressBar.style.width = "35%";
+
+      let elapsedSec = 0;
+      clearInterval(denoiserTimerInterval);
+      denoiserTimerInterval = setInterval(() => {
+        elapsedSec += 0.1;
+        if (denoiserTimer) denoiserTimer.textContent = `${elapsedSec.toFixed(1)}s`;
+      }, 100);
+
+      const mode = (denoiserModeSelect && denoiserModeSelect.value) || "full";
+      const level = (denoiserLevelSelect && denoiserLevelSelect.value) || "medium";
+      const customName = (denoiserCustomFileName ? denoiserCustomFileName.value.trim() : "");
+
+      const formData = new FormData();
+      formData.append("file", denoiserRawFile);
+      formData.append("mode", mode);
+      formData.append("noise_reduction_level", level);
+      formData.append("remove_bg_music", mode !== "denoise_only" ? "true" : "false");
+      formData.append("boost_clarity", "true");
+      if (customName) formData.append("custom_filename", customName);
+
+      try {
+        if (denoiserProgressBar) denoiserProgressBar.style.width = "70%";
+        const res = await fetch(`${API_BASE}/audio/denoise-and-isolate`, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: "Lỗi tách nhiễu" }));
+          throw new Error(err.detail || "Lỗi tách nhiễu");
+        }
+
+        const data = await res.json();
+        denoiserLastProcessedResult = data;
+        if (denoiserProgressBar) denoiserProgressBar.style.width = "100%";
+
+        // Render Results
+        if (denoisedAudioPlayer) {
+          denoisedAudioPlayer.src = `${API_BASE}${data.clean_audio_url}?t=${Date.now()}`;
+          denoisedAudioPlayer.play().catch(() => {});
+        }
+
+        if (denoiserClarityBadge) {
+          denoiserClarityBadge.textContent = `Độ trong: ${data.metrics.vocal_clarity_score}/100`;
+        }
+        if (resNoiseReduced) {
+          resNoiseReduced.textContent = `-${data.metrics.noise_reduction_pct}%`;
+        }
+        if (resDenoisedDur) {
+          resDenoisedDur.textContent = `${data.metrics.duration_seconds.toFixed(1)}s`;
+        }
+        if (resDenoisedElapsed) {
+          resDenoisedElapsed.textContent = `${data.metrics.elapsed_seconds}s`;
+        }
+
+        if (btnDownloadDenoisedWav) {
+          btnDownloadDenoisedWav.href = `${API_BASE}${data.clean_audio_url}`;
+          btnDownloadDenoisedWav.download = data.filename;
+        }
+
+        if (denoiserResultBox) denoiserResultBox.classList.remove("hidden");
+      } catch (e) {
+        alert(`Lỗi: ${e.message}`);
+      } finally {
+        clearInterval(denoiserTimerInterval);
+        btnExecuteDenoise.disabled = false;
+        if (btnExecuteDenoiseText) btnExecuteDenoiseText.textContent = "Bắt Đầu Bóc Tách & Khử Nhiễu AI";
+        setTimeout(() => {
+          if (denoiserProgressBox) denoiserProgressBox.classList.add("hidden");
+        }, 1000);
+      }
+    });
+  }
+
+  // Save Denoised Audio Directly to Selected Style
+  if (btnSaveDenoisedToStyle) {
+    btnSaveDenoisedToStyle.addEventListener("click", async () => {
+      if (!denoiserLastProcessedResult) {
+        alert("Vui lòng thực hiện tách giọng trước!");
+        return;
+      }
+
+      const denoiserTargetStyleSelect = document.getElementById("denoiserTargetStyleSelect");
+      const targetStyle = (denoiserTargetStyleSelect && denoiserTargetStyleSelect.value) || activeStyle;
+
+      btnSaveDenoisedToStyle.disabled = true;
+      btnSaveDenoisedToStyle.textContent = "Đang nạp vào Style...";
+
+      try {
+        const audioUrl = `${API_BASE}${denoiserLastProcessedResult.clean_audio_url}`;
+        const audioRes = await fetch(audioUrl);
+        const blob = await audioRes.blob();
+
+        const formData = new FormData();
+        formData.append("files", blob, denoiserLastProcessedResult.filename);
+        formData.append("style_id", targetStyle);
+
+        const uploadRes = await fetch(`${API_BASE}/styles/upload-samples`, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json().catch(() => ({ detail: "Lỗi nạp style" }));
+          throw new Error(err.detail || "Lỗi nạp style");
+        }
+
+        const data = await uploadRes.json();
+        activeStyle = targetStyle;
+        await loadStyles();
+        closeDenoiser();
+
+        alert(`🎉 Đã nạp thành công file giọng sạch vào Style '${targetStyle}'!\n- Vector nơ-ron: ${data.profile.faiss_timbre_vectors}`);
+      } catch (e) {
+        alert(`Lỗi: ${e.message}`);
+      } finally {
+        btnSaveDenoisedToStyle.disabled = false;
+        btnSaveDenoisedToStyle.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Nạp Vào Style Ngay';
+      }
+    });
+  }
+
+  // Send Clean Audio directly to Waveform Cutter
+  if (btnSendDenoisedToCutter) {
+    btnSendDenoisedToCutter.addEventListener("click", async () => {
+      if (!denoiserLastProcessedResult) {
+        alert("Vui lòng thực hiện tách giọng trước!");
+        return;
+      }
+
+      try {
+        const audioUrl = `${API_BASE}${denoiserLastProcessedResult.clean_audio_url}`;
+        const res = await fetch(audioUrl);
+        const arrayBuf = await res.arrayBuffer();
+
+        if (!cutterAudioCtx) {
+          cutterAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        cutterAudioBuffer = await cutterAudioCtx.decodeAudioData(arrayBuf.slice(0));
+        cutterRawFile = new File([arrayBuf], denoiserLastProcessedResult.filename, { type: "audio/wav" });
+        cutterTotalDuration = cutterAudioBuffer.duration;
+        cutterStartSec = 0.0;
+        cutterEndSec = Math.min(10.0, cutterTotalDuration);
+
+        closeDenoiser();
+        openCutter();
+        
+        if (cutterUploadText) {
+          cutterUploadText.innerHTML = `<span class="text-teal-300 font-bold"><i class="fa-solid fa-circle-check text-emerald-400"></i> ${denoiserLastProcessedResult.filename} (Đã tách sạch)</span>`;
+        }
+        if (cutterCustomSliceName) {
+          cutterCustomSliceName.value = denoiserLastProcessedResult.filename.replace(/\.[^/.]+$/, "") + "_doan1";
+        }
+
+        if (cutterWaveformSection) cutterWaveformSection.classList.remove("hidden");
+        updateCutterTimeDisplays();
+        drawWaveform();
+      } catch (e) {
+        alert(`Không thể chuyển sang trình cắt: ${e.message}`);
       }
     });
   }

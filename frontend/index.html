@@ -56,6 +56,10 @@
       
       <!-- Action Tools (Slim, Compact Pill Buttons for Mobile & Desktop) -->
       <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+        <button id="btnOpenDenoiserHeader" onclick="window.openDenoiserModal && window.openDenoiserModal()" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-semibold text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95 cursor-pointer" title="Tách giọng & khử tạp âm, nhạc nền">
+          <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i> <span>Tách Nhiễu</span>
+        </button>
+
         <button id="btnOpenAutoTuneHeader" onclick="window.openAutoTuneModal && window.openAutoTuneModal()" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-semibold text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
           <i class="fa-solid fa-graduation-cap text-[11px]"></i> <span>Huấn Luyện</span>
         </button>
@@ -288,9 +292,15 @@
           <span class="text-[10px] text-slate-500 mt-0.5">Tự động nạp vào Style đã chọn ở trên</span>
         </label>
 
-        <button id="btnOpenCutterBox" onclick="window.openCutterModal && window.openCutterModal()" type="button" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600/30 to-violet-600/30 hover:from-indigo-600/40 hover:to-violet-600/40 text-indigo-200 border border-indigo-500/40 font-semibold text-xs flex items-center justify-center gap-2 transition shadow-sm cursor-pointer active:scale-95">
-          <i class="fa-solid fa-scissors text-indigo-400"></i> Mở Trình Cắt Sóng Âm Trực Quan (Waveform Slicer)
-        </button>
+        <!-- Studio Tool Action Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button id="btnOpenDenoiserBox" onclick="window.openDenoiserModal && window.openDenoiserModal()" type="button" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-teal-600/30 to-emerald-600/30 hover:from-teal-600/40 hover:to-emerald-600/40 text-teal-200 border border-teal-500/40 font-semibold text-xs flex items-center justify-center gap-2 transition shadow-sm cursor-pointer active:scale-95">
+            <i class="fa-solid fa-wand-magic-sparkles text-teal-400"></i> Tách Nhiễu & Tách Giọng
+          </button>
+          <button id="btnOpenCutterBox" onclick="window.openCutterModal && window.openCutterModal()" type="button" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600/30 to-violet-600/30 hover:from-indigo-600/40 hover:to-violet-600/40 text-indigo-200 border border-indigo-500/40 font-semibold text-xs flex items-center justify-center gap-2 transition shadow-sm cursor-pointer active:scale-95">
+            <i class="fa-solid fa-scissors text-indigo-400"></i> Cắt Sóng Âm (Slicer)
+          </button>
+        </div>
 
         <!-- Upload Analysis Result -->
         <div id="voiceAnalysisResult" class="hidden bg-slate-900/90 rounded-xl p-4 border border-indigo-500/30 space-y-3 text-xs">
@@ -458,11 +468,174 @@
           </select>
         </div>
 
-        <!-- Action Button -->
-        <button id="btnExecuteSliceAndProfile" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer">
-          <i class="fa-solid fa-scissors"></i>
-          <span id="btnExecuteSliceText">Cắt & Nạp Vào Style Ngay</span>
+        <!-- Action Buttons in Waveform Cutter -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button id="btnExecuteSliceAndDenoise" type="button" class="w-full py-3 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-teal-600/20 transition flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span id="btnExecuteSliceDenoiseText">✨ Tách Nhiễu & Nạp Vào Style</span>
+          </button>
+          <button id="btnExecuteSliceAndProfile" type="button" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer">
+            <i class="fa-solid fa-scissors"></i>
+            <span id="btnExecuteSliceText">✂️ Cắt Giữ Nguyên & Nạp</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STUDIO TÁCH GIỌNG & KHỬ TẠP ÂM (VOCAL ISOLATION & DENOISER MODAL) -->
+  <div id="denoiserModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="glass-card bg-slate-900/95 border border-teal-500/40 rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-600 to-emerald-500 border border-teal-500/40 flex items-center justify-center text-white shadow-md shadow-teal-500/20">
+            <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-100 text-sm sm:text-base flex items-center gap-2">
+              Studio Tách Giọng & Khử Tạp Âm AI
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 font-normal border border-teal-500/30">DSP & Neural HPSS</span>
+            </h3>
+            <p class="text-[11px] text-slate-400">Tách riêng lời thoại, triệt tiêu nhạc nền & khử nhiễu môi trường giữ nguyên phong cách</p>
+          </div>
+        </div>
+        <button id="btnCloseDenoiserModal" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-base"></i>
         </button>
+      </div>
+
+      <!-- Upload Zone -->
+      <div id="denoiserUploadArea" class="border-2 border-dashed border-slate-800 hover:border-teal-500/60 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer transition bg-slate-950/60 group">
+        <input type="file" id="denoiserFileInput" accept=".mp3,.wav,.m4a,.flac,.ogg,.aac" class="hidden">
+        <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 group-hover:text-teal-400 mb-2 transition"></i>
+        <span id="denoiserUploadText" class="text-xs font-semibold text-slate-300 group-hover:text-white transition text-center">
+          Kéo thả hoặc Bấm chọn file MP3 / WAV cần tách giọng & khử nhiễu
+        </span>
+        <span class="text-[10px] text-slate-500 mt-1">Hỗ trợ MP3, WAV, M4A, FLAC (Không giới hạn độ dài)</span>
+      </div>
+
+      <!-- Controls & Settings Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        
+        <!-- Mode Selection -->
+        <div class="space-y-1.5 bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+          <label class="block font-semibold text-slate-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-sliders text-teal-400"></i> Chế độ xử lý:
+          </label>
+          <select id="denoiserModeSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-semibold text-teal-300 focus:border-teal-500 cursor-pointer">
+            <option value="full" selected>🌟 Tách Toàn Diện (Khử nhạc + Khử nhiễu + Trong trẻo)</option>
+            <option value="vocal_isolate">🎵 Tách Giọng Khỏi Nhạc (Loại bỏ beat/nhạc nền)</option>
+            <option value="denoise_only">🔇 Khử Tạp Âm Môi Trường (Gió, ồn, rè, xì)</option>
+          </select>
+        </div>
+
+        <!-- Noise Reduction Level -->
+        <div class="space-y-1.5 bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+          <label class="block font-semibold text-slate-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-shield-halved text-emerald-400"></i> Cường độ khử nhiễu:
+          </label>
+          <select id="denoiserLevelSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-semibold text-emerald-300 focus:border-emerald-500 cursor-pointer">
+            <option value="medium" selected>Tiêu chuẩn phòng thu (85% - Đề xuất)</option>
+            <option value="light">Nhẹ nhàng tự nhiên (65%)</option>
+            <option value="aggressive">Triệt để mạnh mẽ (98%)</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- Execute Denoise CTA Button -->
+      <button id="btnExecuteDenoise" type="button" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-600 via-teal-500 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-sm shadow-lg shadow-teal-600/20 transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
+        <span id="btnExecuteDenoiseText">Bắt Đầu Bóc Tách & Khử Nhiễu AI</span>
+      </button>
+
+      <!-- Processing Progress Box -->
+      <div id="denoiserProgressBox" class="hidden bg-slate-950/90 rounded-xl p-4 border border-teal-500/30 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span id="denoiserStatusText" class="font-medium text-teal-400 flex items-center gap-2">
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang phân rã sóng âm & tách giọng nói...
+          </span>
+          <span id="denoiserTimer" class="font-mono text-slate-400">0.0s</span>
+        </div>
+        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+          <div id="denoiserProgressBar" class="bg-teal-500 h-full w-0 transition-all duration-300"></div>
+        </div>
+      </div>
+
+      <!-- Result & Output Card -->
+      <div id="denoiserResultBox" class="hidden bg-slate-950/95 rounded-xl p-4 border border-teal-500/40 space-y-3.5 animate-in fade-in">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-teal-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i> Kết Quả Giọng Nói Sau Khi Tách Sạch
+          </span>
+          <span id="denoiserClarityBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 font-mono font-bold border border-teal-500/30">
+            Độ trong: 98.5/100
+          </span>
+        </div>
+
+        <!-- Clean Audio Player -->
+        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+          <audio id="denoisedAudioPlayer" controls class="w-full h-9 accent-teal-500"></audio>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+          <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+            <span class="text-slate-500 block text-[10px]">Tạp âm giảm:</span>
+            <span id="resNoiseReduced" class="font-semibold text-emerald-400 font-mono">0%</span>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+            <span class="text-slate-500 block text-[10px]">Thời lượng giọng:</span>
+            <span id="resDenoisedDur" class="font-semibold text-slate-200 font-mono">0.0s</span>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 col-span-2 sm:col-span-1">
+            <span class="text-slate-500 block text-[10px]">Thời gian tách:</span>
+            <span id="resDenoisedElapsed" class="font-semibold text-teal-300 font-mono">0.0s</span>
+          </div>
+        </div>
+
+        <!-- Destination Style and Custom Naming Form -->
+        <div class="space-y-2 bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">
+                <i class="fa-solid fa-file-signature text-amber-400"></i> Đổi tên file MP3 sạch:
+              </label>
+              <input type="text" id="denoiserCustomFileName" placeholder="Ví dụ: giong_sach_tinh_tri_1" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-100 text-xs focus:border-teal-500">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">
+                <i class="fa-solid fa-bullseye text-teal-400"></i> Chọn Style Để Nạp Vào:
+              </label>
+              <select id="denoiserTargetStyleSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs font-semibold text-teal-300 focus:border-teal-500 cursor-pointer">
+                <option value="loc_dinh_ky" selected>Lộc Đỉnh Ký</option>
+                <option value="neutral">Mặc Định</option>
+                <option value="storytelling">Kể Chuyện</option>
+                <option value="serious">Nghiêm Túc</option>
+                <option value="lali5">Lali 5</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Row: Save to Style / Send to Cutter / Download -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+          <button id="btnSaveDenoisedToStyle" type="button" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs shadow-md shadow-teal-600/20 transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk"></i> Nạp Vào Style Ngay
+          </button>
+          
+          <button id="btnSendDenoisedToCutter" type="button" class="py-2.5 px-3 rounded-xl bg-indigo-600/80 hover:bg-indigo-500 text-indigo-100 font-semibold text-xs border border-indigo-500/40 transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-scissors"></i> Chuyển Sang Cắt MP3
+          </button>
+
+          <a id="btnDownloadDenoisedWav" href="#" download="giong_sach.wav" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition active:scale-95 flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-download"></i> Tải WAV Sạch
+          </a>
+        </div>
 
       </div>
 
@@ -815,7 +988,7 @@
     </div>
   </footer>
 
-  <script src="/app.js?v=20260826_fix_buttons_v6"></script>
+  <script src="/app.js?v=20260826_vocal_denoiser_v7"></script>
 </body>
 </html>
 
