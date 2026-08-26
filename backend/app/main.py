@@ -300,21 +300,21 @@ async def synthesize(req: TTSRequest):
                     except OSError:
                         pass
 
-        # Apply Character Voice Morphing & Spectral Transformation Pipeline
+        # Apply Phoneme-Level Prosody & Syllable Tone Mapping Pipeline
         try:
             temp_wav = os.path.join(OUTPUTS_DIR, f"{session_id}_raw.wav")
             AudioProcessor.convert_to_wav(final_path, temp_wav, target_sr=TARGET_SAMPLE_RATE)
             samples, sr, ch = AudioProcessor.read_wav_pcm16(temp_wav)
             samples_float = np.array(samples, dtype=np.float32) / 32768.0
 
-            from .audio.fourier_spectral_engine import FourierSpectralEngine
-            fourier_engine = FourierSpectralEngine.get_instance()
-            out_float = fourier_engine.apply_voice_morphing(
+            from .audio.phoneme_prosody_matcher import PhonemeProsodyMatcher
+            matcher = PhonemeProsodyMatcher.get_instance()
+            out_float = matcher.apply_syllable_prosody(
                 samples_float,
-                style_id=style_profile.style_id,
-                sr=TARGET_SAMPLE_RATE
+                text=norm_text,
+                style_id=style_profile.style_id
             )
-            engine_name = f"fourier-morph-{style_profile.style_id}"
+            engine_name = f"phoneme-prosody-{style_profile.style_id}"
 
             out_pcm16 = np.clip(out_float * 32767.0, -32768, 32767).astype(np.int16).tolist()
             final_wav_filename = f"{session_id}_v7.wav"
@@ -322,7 +322,7 @@ async def synthesize(req: TTSRequest):
             AudioProcessor.write_wav_pcm16(final_wav_path, out_pcm16, sample_rate=TARGET_SAMPLE_RATE)
             final_path = final_wav_path
         except Exception as e:
-            print(f"Voice Morphing notice: {e}")
+            print(f"Phoneme Prosody notice: {e}")
             final_wav_filename = final_filename
 
     elapsed = round(time.time() - t0, 2)
