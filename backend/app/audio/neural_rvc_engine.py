@@ -38,7 +38,13 @@ class NeuralRVCEngine:
             from configs.config import Config
             from infer.vc.modules import VC
 
-            config = Config()
+            old_argv = sys.argv
+            sys.argv = [sys.argv[0]]
+            try:
+                config = Config()
+            finally:
+                sys.argv = old_argv
+
             config.device = "cpu"
             config.is_half = False
             self.vc = VC(config)
