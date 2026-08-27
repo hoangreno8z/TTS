@@ -1126,7 +1126,7 @@
     </div>
   </footer>
 
-  <script src="/app.js?v=20260826_download_cutter_v23"></script>
+  <script src="/app.js?v=20260827_merger_v24"></script>
 
   <!-- Multi-Provider API Keys & Cascade Modal -->
   <div id="modalApiKeys" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-4">
@@ -1215,8 +1215,8 @@
       </div>
 
       <!-- Dropzone -->
-      <div id="mergerDropzone" class="border-2 border-dashed border-slate-700 hover:border-sky-500 rounded-xl p-5 text-center cursor-pointer bg-slate-900/60 hover:bg-slate-900 transition space-y-2">
-        <input type="file" id="mergerFileInput" multiple accept="audio/*" class="hidden" />
+      <div id="mergerDropzone" onclick="document.getElementById('mergerFileInput').click()" class="border-2 border-dashed border-slate-700 hover:border-sky-500 rounded-xl p-5 text-center cursor-pointer bg-slate-900/60 hover:bg-slate-900 transition space-y-2 active:scale-[0.99]">
+        <input type="file" id="mergerFileInput" multiple accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac" onchange="if (window.handleMergerFileInput) window.handleMergerFileInput(this)" class="hidden" />
         <div class="w-10 h-10 rounded-full bg-sky-500/15 text-sky-400 mx-auto flex items-center justify-center">
           <i class="fa-solid fa-cloud-arrow-up text-base"></i>
         </div>

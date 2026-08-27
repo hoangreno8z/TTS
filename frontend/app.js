@@ -2940,45 +2940,27 @@ window.closeMergerModal = function() {
   if (modal) modal.classList.add('hidden');
 };
 
-const mergerDropzone = document.getElementById('mergerDropzone');
-const mergerFileInput = document.getElementById('mergerFileInput');
-
-if (mergerDropzone && mergerFileInput) {
-  mergerDropzone.addEventListener('click', () => mergerFileInput.click());
-
-  mergerDropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    mergerDropzone.classList.add('border-sky-500', 'bg-sky-500/10');
-  });
-
-  mergerDropzone.addEventListener('dragleave', () => {
-    mergerDropzone.classList.remove('border-sky-500', 'bg-sky-500/10');
-  });
-
-  mergerDropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    mergerDropzone.classList.remove('border-sky-500', 'bg-sky-500/10');
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleMergerFiles(Array.from(e.dataTransfer.files));
-    }
-  });
-
-  mergerFileInput.addEventListener('change', (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleMergerFiles(Array.from(e.target.files));
-    }
-  });
-}
+window.handleMergerFileInput = function(inputEl) {
+  if (inputEl && inputEl.files && inputEl.files.length > 0) {
+    const files = Array.from(inputEl.files);
+    handleMergerFiles(files);
+    inputEl.value = '';
+  }
+};
 
 function handleMergerFiles(files) {
   const validAudioFiles = files.filter(f => f.type.startsWith('audio/') || f.name.match(/\.(mp3|wav|m4a|ogg|aac|flac)$/i));
   if (validAudioFiles.length === 0) {
     if (typeof showToast === 'function') showToast('Vui lòng chọn file âm thanh hợp lệ (MP3, WAV...)', 'warning');
+    else alert('Vui lòng chọn file âm thanh hợp lệ (MP3, WAV...)');
     return;
   }
 
   mergerUploadedFiles = mergerUploadedFiles.concat(validAudioFiles);
   renderMergerFileList();
+  if (typeof showToast === 'function') {
+    showToast('Đã thêm ' + validAudioFiles.length + ' file âm thanh vào danh sách ghép!', 'info');
+  }
 }
 
 function renderMergerFileList() {
@@ -2995,7 +2977,9 @@ function renderMergerFileList() {
   }
 
   container.classList.remove('hidden');
-  countLbl.textContent = `Danh sách file đã chọn (${mergerUploadedFiles.length}):`;
+  if (countLbl) {
+    countLbl.textContent = 'Danh sách file đã chọn (' + mergerUploadedFiles.length + '):';
+  }
 
   list.innerHTML = mergerUploadedFiles.map((file, idx) => `
     <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs">
@@ -3027,6 +3011,7 @@ window.clearMergerFiles = function() {
 window.processAudioMerge = async function() {
   if (mergerUploadedFiles.length === 0) {
     if (typeof showToast === 'function') showToast('Vui lòng chọn ít nhất 1 file âm thanh để ghép!', 'warning');
+    else alert('Vui lòng chọn ít nhất 1 file âm thanh để ghép!');
     return;
   }
 
@@ -3086,9 +3071,10 @@ window.processAudioMerge = async function() {
     const audioUrl = URL.createObjectURL(mergedAudioBlob);
     if (player) {
       player.src = audioUrl;
+      player.play().catch(() => {});
     }
     if (durLbl) {
-      durLbl.textContent = `Thời lượng: ${renderedBuffer.duration.toFixed(1)} giây (${(mergedAudioBlob.size / 1024 / 1024).toFixed(2)} MB)`;
+      durLbl.textContent = 'Thời lượng: ' + renderedBuffer.duration.toFixed(1) + 's (' + (mergedAudioBlob.size / 1024 / 1024).toFixed(2) + ' MB)';
     }
     if (resultArea) {
       resultArea.classList.remove('hidden');
@@ -3100,6 +3086,7 @@ window.processAudioMerge = async function() {
   } catch (err) {
     console.error('Audio merge error:', err);
     if (typeof showToast === 'function') showToast('Lỗi khi ghép file: ' + err.message, 'error');
+    else alert('Lỗi khi ghép file: ' + err.message);
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -3112,7 +3099,7 @@ window.downloadMergedAudio = function() {
   if (!mergedAudioBlob) return;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(mergedAudioBlob);
-  a.download = `giong_mau_ghep_${Date.now()}.wav`;
+  a.download = 'giong_mau_ghep_' + Date.now() + '.wav';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
