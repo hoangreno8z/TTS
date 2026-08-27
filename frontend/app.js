@@ -2922,3 +2922,247 @@ window.getCustomKeys = function() {
   if (groq) keys.groq = groq;
   return keys;
 };
+
+
+// ==========================================
+// AUDIO MERGER STUDIO (CLIENT-SIDE WEB AUDIO)
+// ==========================================
+let mergerUploadedFiles = [];
+let mergedAudioBlob = null;
+
+window.openMergerModal = function() {
+  const modal = document.getElementById('modalAudioMerger');
+  if (modal) modal.classList.remove('hidden');
+};
+
+window.closeMergerModal = function() {
+  const modal = document.getElementById('modalAudioMerger');
+  if (modal) modal.classList.add('hidden');
+};
+
+const mergerDropzone = document.getElementById('mergerDropzone');
+const mergerFileInput = document.getElementById('mergerFileInput');
+
+if (mergerDropzone && mergerFileInput) {
+  mergerDropzone.addEventListener('click', () => mergerFileInput.click());
+
+  mergerDropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    mergerDropzone.classList.add('border-sky-500', 'bg-sky-500/10');
+  });
+
+  mergerDropzone.addEventListener('dragleave', () => {
+    mergerDropzone.classList.remove('border-sky-500', 'bg-sky-500/10');
+  });
+
+  mergerDropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    mergerDropzone.classList.remove('border-sky-500', 'bg-sky-500/10');
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleMergerFiles(Array.from(e.dataTransfer.files));
+    }
+  });
+
+  mergerFileInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleMergerFiles(Array.from(e.target.files));
+    }
+  });
+}
+
+function handleMergerFiles(files) {
+  const validAudioFiles = files.filter(f => f.type.startsWith('audio/') || f.name.match(/\.(mp3|wav|m4a|ogg|aac|flac)$/i));
+  if (validAudioFiles.length === 0) {
+    if (typeof showToast === 'function') showToast('Vui lòng chọn file âm thanh hợp lệ (MP3, WAV...)', 'warning');
+    return;
+  }
+
+  mergerUploadedFiles = mergerUploadedFiles.concat(validAudioFiles);
+  renderMergerFileList();
+}
+
+function renderMergerFileList() {
+  const container = document.getElementById('mergerFileListContainer');
+  const list = document.getElementById('mergerFileList');
+  const countLbl = document.getElementById('lblMergerFileCount');
+
+  if (!container || !list) return;
+
+  if (mergerUploadedFiles.length === 0) {
+    container.classList.add('hidden');
+    list.innerHTML = '';
+    return;
+  }
+
+  container.classList.remove('hidden');
+  countLbl.textContent = `Danh sách file đã chọn (${mergerUploadedFiles.length}):`;
+
+  list.innerHTML = mergerUploadedFiles.map((file, idx) => `
+    <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs">
+      <div class="flex items-center gap-2 truncate">
+        <span class="w-5 h-5 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-[10px] shrink-0">${idx + 1}</span>
+        <span class="text-slate-200 truncate font-medium">${file.name}</span>
+        <span class="text-[10px] text-slate-500 shrink-0">(${Math.round(file.size / 1024)} KB)</span>
+      </div>
+      <button type="button" onclick="window.removeMergerFile(${idx})" class="text-slate-500 hover:text-rose-400 p-1 transition cursor-pointer shrink-0">
+        <i class="fa-solid fa-trash-can text-xs"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+window.removeMergerFile = function(idx) {
+  mergerUploadedFiles.splice(idx, 1);
+  renderMergerFileList();
+};
+
+window.clearMergerFiles = function() {
+  mergerUploadedFiles = [];
+  renderMergerFileList();
+  const resArea = document.getElementById('mergerResultArea');
+  if (resArea) resArea.classList.add('hidden');
+};
+
+// Pure Web Audio API Concatenation (0 server latency, 100% Client-Side)
+window.processAudioMerge = async function() {
+  if (mergerUploadedFiles.length === 0) {
+    if (typeof showToast === 'function') showToast('Vui lòng chọn ít nhất 1 file âm thanh để ghép!', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('btnExecuteMerge');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>ĐANG GHÉP NỐI ÂM THANH...</span>';
+  }
+
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContextClass();
+    const gapSeconds = parseFloat(document.getElementById('mergerGapSelect')?.value || '0.2');
+
+    // Decode all audio files into AudioBuffers
+    const audioBuffers = [];
+    for (let file of mergerUploadedFiles) {
+      const arrayBuffer = await file.arrayBuffer();
+      const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      audioBuffers.push(decodedBuffer);
+    }
+
+    // Calculate total duration
+    const numChannels = Math.max(...audioBuffers.map(b => b.numberOfChannels));
+    const sampleRate = audioBuffers[0].sampleRate;
+    let totalLength = 0;
+
+    audioBuffers.forEach((buf, idx) => {
+      totalLength += buf.length;
+      if (idx < audioBuffers.length - 1) {
+        totalLength += Math.round(gapSeconds * sampleRate);
+      }
+    });
+
+    // Create OfflineAudioContext to render full concatenated audio
+    const offlineCtx = new OfflineAudioContext(numChannels, totalLength, sampleRate);
+    let offset = 0;
+
+    audioBuffers.forEach((buf, idx) => {
+      const source = offlineCtx.createBufferSource();
+      source.buffer = buf;
+      source.connect(offlineCtx.destination);
+      source.start(offset);
+      offset += buf.duration + gapSeconds;
+    });
+
+    const renderedBuffer = await offlineCtx.startRendering();
+
+    // Convert rendered AudioBuffer to WAV Blob
+    mergedAudioBlob = bufferToWaveBlob(renderedBuffer);
+
+    // Display result
+    const resultArea = document.getElementById('mergerResultArea');
+    const player = document.getElementById('mergedAudioPlayer');
+    const durLbl = document.getElementById('lblMergedDuration');
+
+    const audioUrl = URL.createObjectURL(mergedAudioBlob);
+    if (player) {
+      player.src = audioUrl;
+    }
+    if (durLbl) {
+      durLbl.textContent = `Thời lượng: ${renderedBuffer.duration.toFixed(1)} giây (${(mergedAudioBlob.size / 1024 / 1024).toFixed(2)} MB)`;
+    }
+    if (resultArea) {
+      resultArea.classList.remove('hidden');
+    }
+
+    if (typeof showToast === 'function') {
+      showToast('Ghép nối âm thanh thành công! Bạn có thể tải về ngay.', 'success');
+    }
+  } catch (err) {
+    console.error('Audio merge error:', err);
+    if (typeof showToast === 'function') showToast('Lỗi khi ghép file: ' + err.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i><span>GHÉP NỐI ÂM THANH NGAY</span>';
+    }
+  }
+};
+
+window.downloadMergedAudio = function() {
+  if (!mergedAudioBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(mergedAudioBlob);
+  a.download = `giong_mau_ghep_${Date.now()}.wav`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
+
+// Helper: AudioBuffer to WAV Blob
+function bufferToWaveBlob(buffer) {
+  const numOfChan = buffer.numberOfChannels;
+  const length = buffer.length * numOfChan * 2 + 44;
+  const out = new DataView(new ArrayBuffer(length));
+  const channels = [];
+  let sample = 0;
+  let offset = 0;
+  let pos = 0;
+
+  function setUint16(data) { out.setUint16(pos, data, true); pos += 2; }
+  function setUint32(data) { out.setUint32(pos, data, true); pos += 4; }
+
+  // RIFF identifier
+  setUint32(0x46464952); // "RIFF"
+  setUint32(length - 8);  // file length - 8
+  setUint32(0x45564157); // "WAVE"
+
+  // fmt sub-chunk
+  setUint32(0x20746d66); // "fmt " chunk
+  setUint32(16);          // SubChunk1Size (16 for PCM)
+  setUint16(1);           // AudioFormat (1 for PCM)
+  setUint16(numOfChan);
+  setUint32(buffer.sampleRate);
+  setUint32(buffer.sampleRate * 2 * numOfChan); // byte rate
+  setUint16(numOfChan * 2); // block align
+  setUint16(16);          // bits per sample
+
+  // data sub-chunk
+  setUint32(0x61746164); // "data" chunk
+  setUint32(length - pos - 4); // data length
+
+  for (let i = 0; i < buffer.numberOfChannels; i++) {
+    channels.push(buffer.getChannelData(i));
+  }
+
+  while (offset < buffer.length) {
+    for (let i = 0; i < numOfChan; i++) {
+      sample = Math.max(-1, Math.min(1, channels[i][offset]));
+      sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+      out.setInt16(pos, sample, true);
+      pos += 2;
+    }
+    offset++;
+  }
+
+  return new Blob([out.buffer], { type: 'audio/wav' });
+}
