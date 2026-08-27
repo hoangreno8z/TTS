@@ -78,6 +78,8 @@ class TTSRequest(BaseModel):
     voice_gender: Optional[str] = Field(default="auto", description="male, female, or auto")
     core_mode: Optional[str] = Field(default="neural", description="'neural' (Core 2 Local AI) or 'parametric' (Core 1 0-AI WORLD)")
     gpu_server_url: Optional[str] = Field(default=None, description="Optional remote Colab GPU F5-TTS endpoint")
+    custom_keys: Optional[Dict[str, str]] = Field(default=None, description="Optional user-provided API keys (gemini, groq, elevenlabs, fish_audio)")
+    provider_mode: Optional[str] = Field(default="auto", description="'auto' for cascade failover, or specific provider name")
 
 class TTSResponse(BaseModel):
     status: str
@@ -156,7 +158,6 @@ async def rename_style_endpoint(req: RenameStyleRequest):
 async def synthesize(req: TTSRequest):
     t0 = time.time()
     
-    # 1. Validate & Normalize Text (Không giới hạn ký tự, tự động phân đoạn)
     raw_text = req.text.strip()
     if not raw_text:
         raise HTTPException(
@@ -164,7 +165,52 @@ async def synthesize(req: TTSRequest):
             detail="Văn bản không được để trống."
         )
 
-    norm_text = VietnameseNormalizer.normalize(raw_text)
+    # 1. Brain Cascade Engine (Gemini -> Groq -> Nvidia NIM -> Local Regex)
+    from .services.brain_cascade import BrainCascadeEngine
+    from .services.voice_cascade import VoiceCascadeEngine
+
+    brain_engine = BrainCascadeEngine.get_instance()
+    voice_engine = VoiceCascadeEngine.get_instance()
+
+    norm_text, brain_provider, brain_time = brain_engine.normalize(
+        raw_text,
+        custom_keys=getattr(req, "custom_keys", None)
+    )
+
+    # 2. Resolve Style & Parameters
+    style_profile = style_manager.get_style(req.style_id)
+    speed = req.speed if req.speed is not None else style_profile.speed
+    session_id = f"tts_{int(time.time())}_{uuid.uuid4().hex[:6]}"
+
+    # 3. Voice Cascade Engine (ElevenLabs -> Fish Audio -> Edge-TTS)
+    try:
+        audio_bytes, audio_fmt, voice_provider, voice_time = await voice_engine.synthesize(
+            text=norm_text,
+            style_id=req.style_id,
+            voice_gender=req.voice_gender or "male",
+            speed=speed,
+            custom_keys=getattr(req, "custom_keys", None)
+        )
+        if audio_bytes and len(audio_bytes) > 500:
+            final_filename = f"{session_id}.{audio_fmt}"
+            final_path = os.path.join(OUTPUTS_DIR, final_filename)
+            with open(final_path, "wb") as f_out:
+                f_out.write(audio_bytes)
+            
+            elapsed = round(time.time() - t0, 2)
+            return TTSResponse(
+                status="success",
+                message=f"Đã tạo âm thanh qua {voice_provider}.",
+                audio_file=final_filename,
+                audio_url=f"/outputs/{final_filename}",
+                total_characters=len(norm_text),
+                total_chunks=1,
+                style=req.style_id,
+                engine=f"{brain_provider} + {voice_provider}",
+                elapsed_seconds=elapsed
+            )
+    except Exception as cascade_err:
+        print(f"[Main] Cascade synthesis notice: {cascade_err}")
     
     # 2. Resolve Style & Parameters
     style_profile = style_manager.get_style(req.style_id)

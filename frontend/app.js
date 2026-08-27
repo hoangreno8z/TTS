@@ -2842,3 +2842,83 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
+
+
+// ==========================================
+// MULTI-PROVIDER API KEYS & CASCADE HANDLERS
+// ==========================================
+window.openApiKeysModal = function() {
+  const modal = document.getElementById('modalApiKeys');
+  if (modal) modal.classList.remove('hidden');
+  
+  const elEleven = document.getElementById('inputKeyElevenLabs');
+  const elFish = document.getElementById('inputKeyFishAudio');
+  const elGemini = document.getElementById('inputKeyGemini');
+  const elGroq = document.getElementById('inputKeyGroq');
+
+  if (elEleven) elEleven.value = localStorage.getItem('api_key_elevenlabs') || '';
+  if (elFish) elFish.value = localStorage.getItem('api_key_fish_audio') || '';
+  if (elGemini) elGemini.value = localStorage.getItem('api_key_gemini') || '';
+  if (elGroq) elGroq.value = localStorage.getItem('api_key_groq') || '';
+};
+
+window.closeApiKeysModal = function() {
+  const modal = document.getElementById('modalApiKeys');
+  if (modal) modal.classList.add('hidden');
+};
+
+window.saveApiKeys = function() {
+  const elEleven = document.getElementById('inputKeyElevenLabs');
+  const elFish = document.getElementById('inputKeyFishAudio');
+  const elGemini = document.getElementById('inputKeyGemini');
+  const elGroq = document.getElementById('inputKeyGroq');
+
+  const eleven = elEleven ? elEleven.value.trim() : '';
+  const fish = elFish ? elFish.value.trim() : '';
+  const gemini = elGemini ? elGemini.value.trim() : '';
+  const groq = elGroq ? elGroq.value.trim() : '';
+
+  if (eleven) localStorage.setItem('api_key_elevenlabs', eleven); else localStorage.removeItem('api_key_elevenlabs');
+  if (fish) localStorage.setItem('api_key_fish_audio', fish); else localStorage.removeItem('api_key_fish_audio');
+  if (gemini) localStorage.setItem('api_key_gemini', gemini); else localStorage.removeItem('api_key_gemini');
+  if (groq) localStorage.setItem('api_key_groq', groq); else localStorage.removeItem('api_key_groq');
+
+  window.closeApiKeysModal();
+  if (typeof showToast === 'function') {
+    showToast('Đã lưu cấu hình Chuỗi API thành công!', 'success');
+  }
+};
+
+window.clearApiKeys = function() {
+  localStorage.removeItem('api_key_elevenlabs');
+  localStorage.removeItem('api_key_fish_audio');
+  localStorage.removeItem('api_key_gemini');
+  localStorage.removeItem('api_key_groq');
+
+  const elEleven = document.getElementById('inputKeyElevenLabs');
+  const elFish = document.getElementById('inputKeyFishAudio');
+  const elGemini = document.getElementById('inputKeyGemini');
+  const elGroq = document.getElementById('inputKeyGroq');
+
+  if (elEleven) elEleven.value = '';
+  if (elFish) elFish.value = '';
+  if (elGemini) elGemini.value = '';
+  if (elGroq) elGroq.value = '';
+
+  if (typeof showToast === 'function') {
+    showToast('Đã xóa tất cả khóa API lưu trên trình duyệt.', 'info');
+  }
+};
+
+window.getCustomKeys = function() {
+  const keys = {};
+  const eleven = localStorage.getItem('api_key_elevenlabs');
+  const fish = localStorage.getItem('api_key_fish_audio');
+  const gemini = localStorage.getItem('api_key_gemini');
+  const groq = localStorage.getItem('api_key_groq');
+  if (eleven) keys.elevenlabs = eleven;
+  if (fish) keys.fish_audio = fish;
+  if (gemini) keys.gemini = gemini;
+  if (groq) keys.groq = groq;
+  return keys;
+};
