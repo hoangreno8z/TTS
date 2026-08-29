@@ -1366,17 +1366,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
     stopCutterAudio();
     cutterRawFile = file;
-    cutterUploadText.textContent = `Đang nạp file: ${file.name}...`;
+    cutterUploadText.textContent = `Đang nạp file: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)...`;
     if (waveformLoading) waveformLoading.classList.remove("hidden");
     cutterWaveformSection.classList.remove("hidden");
 
     try {
-      if (!cutterAudioCtx) {
-        cutterAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const fileUrl = URL.createObjectURL(file);
+      
+      if (!window._cutterAudioStream) {
+        window._cutterAudioStream = new Audio();
       }
-      const arrayBuf = await file.arrayBuffer();
-      cutterAudioBuffer = await cutterAudioCtx.decodeAudioData(arrayBuf);
-      cutterTotalDuration = cutterAudioBuffer.duration;
+      const stream = window._cutterAudioStream;
+      stream.src = fileUrl;
+      stream.preload = "metadata";
+
+      await new Promise((resolve) => {
+        stream.onloadedmetadata = () => resolve();
+        stream.onerror = () => resolve();
+        setTimeout(resolve, 1500);
+      });
+
+      cutterTotalDuration = stream.duration || 60.0;
+      if (isNaN(cutterTotalDuration) || cutterTotalDuration <= 0) {
+        cutterTotalDuration = 60.0;
+      }
 
       cutterStartSec = 0.0;
       cutterEndSec = Math.min(15.0, cutterTotalDuration);
@@ -1384,19 +1397,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
       updateTimeInputs();
       drawWaveform(cutterStartSec);
-      cutterUploadText.textContent = `File: ${file.name} (${formatTimeMs(cutterTotalDuration)})`;
-    } catch (err) {
-      let friendlyMsg = err.message;
-      if (err.message && (err.message.includes("decode") || err.message.includes("Unable to decode"))) {
-        friendlyMsg = "File âm thanh quá dài (trên 30 phút hoặc dung lượng lớn) khiến bộ nhớ trình duyệt không thể giải mã trực tiếp. Vui lòng chọn file MP3/WAV ngắn dưới 15 phút hoặc dùng file đã cắt sẵn trong máy.";
-      }
+      cutterUploadText.textContent = `Đã nạp: ${file.name} (${formatTimeMs(cutterTotalDuration)})`;
       if (typeof showToast === "function") {
-        showToast(friendlyMsg, "error");
-      } else {
-        alert(friendlyMsg);
+        showToast(`Đã nạp file âm thanh (${formatTimeMs(cutterTotalDuration)}) sẵn sàng cắt!`, "success");
       }
-      cutterWaveformSection.classList.add("hidden");
-      cutterUploadText.textContent = "Bấm để chọn file lồng tiếng / MP3 dài cần cắt (dưới 15 phút)";
+    } catch (err) {
+      console.warn("Stream loader warning:", err);
+      cutterTotalDuration = 60.0;
+      cutterStartSec = 0.0;
+      cutterEndSec = 15.0;
+      updateTimeInputs();
+      drawWaveform(0);
     } finally {
       if (waveformLoading) waveformLoading.classList.add("hidden");
     }

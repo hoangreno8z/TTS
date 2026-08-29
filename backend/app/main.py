@@ -1155,3 +1155,74 @@ def delete_audio_output(filename: str):
 # Mount frontend UI
 if os.path.exists(FRONTEND_DIR):
     app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+
+
+@app.post("/api/audio/slice")
+async def slice_audio_endpoint(
+    file: UploadFile = File(...),
+    start_sec: float = Form(0.0),
+    end_sec: float = Form(10.0),
+    style_id: Optional[str] = Form("loc_dinh_ky"),
+    custom_name: Optional[str] = Form(None),
+    save_to_style: bool = Form(False)
+):
+    import tempfile
+    import soundfile as sf
+    import numpy as np
+    import librosa
+
+    session_id = f"slice_{int(time.time())}_{uuid.uuid4().hex[:6]}"
+    suffix = os.path.splitext(file.filename)[1].lower() or ".mp3"
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_in:
+        content = await file.read()
+        tmp_in.write(content)
+        tmp_in_path = tmp_in.name
+
+    try:
+        start = max(0.0, float(start_sec))
+        dur = max(0.5, float(end_sec) - start)
+        
+        y, sr = librosa.load(tmp_in_path, sr=24000, mono=True, offset=start, duration=dur)
+        
+        max_val = np.max(np.abs(y))
+        if max_val > 1e-4:
+            y = y / max_val * 0.90
+
+        out_filename = f"{session_id}.wav"
+        if custom_name and custom_name.strip():
+            safe_name = "".join(c for c in custom_name if c.isalnum() or c in ('_', '-')).strip()
+            if safe_name:
+                out_filename = f"{safe_name}_{session_id[:6]}.wav"
+
+        out_path = os.path.join(OUTPUTS_DIR, out_filename)
+        sf.write(out_path, y, sr, subtype='PCM_16')
+
+        if save_to_style and style_id:
+            clean_style = style_id.lower().strip().replace(" ", "_")
+            style_raw_dir = os.path.join(PROJECT_ROOT, "data", "raw", clean_style)
+            os.makedirs(style_raw_dir, exist_ok=True)
+            import shutil
+            shutil.copy2(out_path, os.path.join(style_raw_dir, out_filename))
+            try:
+                style_manager.retrain_style(clean_style)
+            except Exception as e:
+                print(f"[Slice] Auto profile update notice: {e}")
+
+        return JSONResponse(content={
+            "status": "success",
+            "message": f"Đã cắt thành công đoạn {dur:.1f}s!",
+            "audio_url": f"/outputs/{out_filename}",
+            "filename": out_filename,
+            "duration_sec": round(dur, 2),
+            "size_kb": round(os.path.getsize(out_path) / 1024, 1)
+        })
+    except Exception as e:
+        print(f"[Slice] Error slicing audio: {e}")
+        raise HTTPException(status_code=500, detail=f"Lỗi khi cắt âm thanh: {str(e)}")
+    finally:
+        if os.path.exists(tmp_in_path):
+            try:
+                os.remove(tmp_in_path)
+            except OSError:
+                pass
