@@ -1386,9 +1386,17 @@ document.addEventListener("DOMContentLoaded", () => {
       drawWaveform(cutterStartSec);
       cutterUploadText.textContent = `File: ${file.name} (${formatTimeMs(cutterTotalDuration)})`;
     } catch (err) {
-      alert(`Không thể đọc file âm thanh này: ${err.message}`);
+      let friendlyMsg = err.message;
+      if (err.message && (err.message.includes("decode") || err.message.includes("Unable to decode"))) {
+        friendlyMsg = "File âm thanh quá dài (trên 30 phút hoặc dung lượng lớn) khiến bộ nhớ trình duyệt không thể giải mã trực tiếp. Vui lòng chọn file MP3/WAV ngắn dưới 15 phút hoặc dùng file đã cắt sẵn trong máy.";
+      }
+      if (typeof showToast === "function") {
+        showToast(friendlyMsg, "error");
+      } else {
+        alert(friendlyMsg);
+      }
       cutterWaveformSection.classList.add("hidden");
-      cutterUploadText.textContent = "Bấm để chọn file lồng tiếng / MP3 dài cần cắt";
+      cutterUploadText.textContent = "Bấm để chọn file lồng tiếng / MP3 dài cần cắt (dưới 15 phút)";
     } finally {
       if (waveformLoading) waveformLoading.classList.add("hidden");
     }
